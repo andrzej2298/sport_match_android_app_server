@@ -20,6 +20,9 @@ class User(models.Model):
     def __str__(self):
         return self.login
 
+    def natural_key(self):
+        return self.login
+
 
 class Workout(geo_models.Model):
     user = models.ForeignKey(
