@@ -22,4 +22,4 @@ services:
     #      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology
     ports:
       - 25432:5432
-    restart: on-failure
+#    command: echo 'alias postgres="psql -h localhost -U ${POSTGRES_USER} -p 5432"' >> ~/.bashrc
