@@ -13,6 +13,10 @@ docker-compose exec api bash
 ./manage.py makemigrations
 ```
 
+# API endpoints
+
+To see available API endpoints, run `firefox localhost:8000/api/`.
+
 # Relevant links
 - [GeoDjango](https://docs.djangoproject.com/en/3.0/ref/contrib/gis/)
 - [PostGIS](https://postgis.net)

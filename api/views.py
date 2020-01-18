@@ -1,9 +1,13 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.core.serializers import serialize
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
+from django.contrib.gis.db.models.functions import Distance
 from .models import User, Workout, Sport, UserSport
 
 from rest_framework import viewsets
+from rest_framework.response import Response
 from .serializers import UserSerializer, WorkoutSerializer
 from .serializers import SportSerializer, UserSportSerializer
 
@@ -47,6 +51,27 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows workouts to be viewed or edited.
     """
-    queryset = Workout.objects.all().order_by()
+    queryset = Workout.objects.all()
     serializer_class = WorkoutSerializer
 
+
+class MatchingWorkoutViewSet(viewsets.ViewSet):
+    """
+    API endpoint that allows matching workouts to be viewed.
+    """
+    def list(self, request):
+        if 'lat' in request.query_params and 'lon' in request.query_params:
+            reference_point = Point(
+                float(request.query_params['lat']),
+                float(request.query_params['lon']),
+            )
+            queryset = Workout.objects.filter(
+                location__distance_lte=(reference_point, D(km=10))
+            ).annotate(
+                distance=Distance('location', reference_point)
+            ).order_by('distance')
+            serializer = WorkoutSerializer(queryset, context={'request': request}, many=True)
+            return Response(serializer.data)
+        else:
+            serializer = WorkoutSerializer(Workout.objects.all(), context={'request': request}, many=True)
+            return Response(serializer.data)
