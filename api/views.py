@@ -8,7 +8,7 @@ from .models import User, Workout, Sport, UserSport
 
 from rest_framework import viewsets
 from rest_framework.response import Response
-from .serializers import UserSerializer, WorkoutSerializer
+from .serializers import UserSerializer, WorkoutSerializer, WorkoutSerializerExpanded
 from .serializers import SportSerializer, UserSportSerializer
 
 
@@ -52,7 +52,12 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     API endpoint that allows workouts to be viewed or edited.
     """
     queryset = Workout.objects.all()
-    serializer_class = WorkoutSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return WorkoutSerializerExpanded
+        else:
+            return WorkoutSerializer
 
 
 class MatchingWorkoutViewSet(viewsets.ViewSet):

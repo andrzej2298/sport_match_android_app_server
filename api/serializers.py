@@ -36,3 +36,8 @@ class WorkoutSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Workout
         fields = '__all__'
+
+
+class WorkoutSerializerExpanded(WorkoutSerializer):
+    user = UserSerializer()
+    sport = SportSerializer()
