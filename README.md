@@ -20,7 +20,7 @@ docker-compose rm db
 # generating new migrations
 docker-compose up
 docker-compose exec api bash
-./manage.py makemigrations
+./manage.py makemigrations api
 ./manage.py migrate
 ```
 By default Docker creates files with root permissions,

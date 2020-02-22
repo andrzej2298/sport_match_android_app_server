@@ -1,12 +1,11 @@
-from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 from rest_framework import status
 from .models import Workout, User, Sport, UserSport
 
 john = {
-    "login": "John",
-    "birth_date": "2020-02-06",
-    "sex": "M"
+    'login': 'John',
+    'birth_date': '2020-02-06',
+    'sex': 'M'
 }
 
 football = {
@@ -14,9 +13,9 @@ football = {
 }
 
 johns_football = {
-    'proficiency': 9,
-    'user': 'http://localhost:8000/api/users/1/',
-    'sport': 'http://localhost:8000/api/sports/1/'
+    'level': 9,
+    'user': 'http://testserver/api/users/1/',
+    'sport': 'http://testserver/api/sports/1/'
 }
 
 mim_coordinates = [
@@ -31,8 +30,8 @@ mim_workout = {
     },
     'start': '2020-10-10T01:01:00Z',
     'end': '2020-10-10T01:01:00Z',
-    'user': 'http://localhost:8000/api/users/1/',
-    'sport': 'http://localhost:8000/api/sports/1/'
+    'user': 'http://testserver/api/users/1/',
+    'sport': 'http://testserver/api/sports/1/'
 }
 
 bitwy_warszawskiej_coordinates = [
@@ -47,35 +46,40 @@ bitwy_warszawskiej_workout = {
     },
     'start': '2020-10-10T01:01:00Z',
     'end': '2020-10-10T01:01:00Z',
-    'user': 'http://localhost:8000/api/users/1/',
-    'sport': 'http://localhost:8000/api/sports/1/'
+    'user': 'http://testserver/api/users/1/',
+    'sport': 'http://testserver/api/sports/1/'
 }
 
 
 class WorkoutTest(APITestCase):
     def setUp(self) -> None:
-        self.add_row(john, '/api/users/', User)
-        self.add_row(football, '/api/sports/', Sport)
-        self.add_row(johns_football, '/api/user_sports/', UserSport)
-        self.add_row(
-            mim_workout,
+        self.user = self.add_row(john, '/api/users/')
+        self.sport = self.add_row(football, '/api/sports/')
+        user_sport = dict(johns_football)
+        user_sport['user'] = self.user
+        user_sport['sport'] = self.sport
+        self.user_sport = self.add_row(user_sport, '/api/user_sports/')
+        workout_a = dict(mim_workout)
+        workout_b = dict(bitwy_warszawskiej_workout)
+        workout_a['user'] = self.user
+        workout_b['user'] = self.user
+        workout_a['sport'] = self.sport
+        workout_b['sport'] = self.sport
+        self.workout_a = self.add_row(
+            workout_a,
             '/api/workouts/',
-            Workout,
-            expected_count=1,
         )
-        self.add_row(
-            bitwy_warszawskiej_workout,
+        self.workout_b = self.add_row(
+            workout_b,
             '/api/workouts/',
-            Workout,
-            expected_count=2,
         )
 
-    def add_row(self, user, url, instance_class, expected_count=1):
-        response = self.client.post(url, user, format='json')
+    def add_row(self, item, url) -> str:
+        response = self.client.post(url, item, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(instance_class.objects.count(), expected_count)
+        return response.data['url']
 
-    def test_closest_workouts(self):
+    def test_closest_workouts(self) -> None:
         mim_lat = mim_coordinates[0]
         mim_lon = mim_coordinates[1]
         response = self.client.get(
@@ -85,3 +89,6 @@ class WorkoutTest(APITestCase):
         self.assertEqual(response.data[0]['location']['coordinates'], mim_coordinates)
         self.assertEqual(response.data[1]['location']['coordinates'], bitwy_warszawskiej_coordinates)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_dummy(self):
+        self.assertTrue(True)

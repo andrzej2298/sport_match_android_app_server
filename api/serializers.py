@@ -2,7 +2,8 @@ from .models import User, Workout, Sport, UserSport
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-
+# HyperlinkedModelSerializer writes urls to resources instead of
+# the database ids to the output json, to write database ids use ModelSerializer instead
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
