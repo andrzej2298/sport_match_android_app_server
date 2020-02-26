@@ -10,9 +10,9 @@ GENDERS = [
     (MALE, 'male'),
     (FEMALE, 'female'),
 ]
-WORKOUT_GENDER_PREFERENCES = GENDERS + [(EITHER, 'E')]
+WORKOUT_GENDER_PREFERENCES = GENDERS + [(EITHER, 'either')]
 
-PROFICIENCY_VALIDATORS = [MinValueValidator(1), MaxValueValidator(10)]
+PROFICIENCY_VALIDATORS = [MinValueValidator(2), MaxValueValidator(10)]
 
 class User(models.Model):
     login = models.CharField(max_length=20)
@@ -77,6 +77,7 @@ class Workout(geo_models.Model):
     preferred_gender = models.CharField(
         max_length=1,
         choices=WORKOUT_GENDER_PREFERENCES,
+        default=EITHER,
     )
     # postgis adds an index by default to geo fields,
     # normally an index on the location field

@@ -5,7 +5,8 @@ from .models import Workout, User, Sport, UserSport
 john = {
     'login': 'John',
     'birth_date': '2020-02-06',
-    'sex': 'M'
+    'gender': 'M',
+    'email': 'john@example.com'
 }
 
 football = {
@@ -28,6 +29,7 @@ mim_workout = {
         'type': 'Point',
         'coordinates': mim_coordinates,
     },
+    'level': 9,
     'start': '2020-10-10T01:01:00Z',
     'end': '2020-10-10T01:01:00Z',
     'user': 'http://testserver/api/users/1/',
@@ -44,6 +46,7 @@ bitwy_warszawskiej_workout = {
         'type': 'Point',
         'coordinates': bitwy_warszawskiej_coordinates,
     },
+    'level': 9,
     'start': '2020-10-10T01:01:00Z',
     'end': '2020-10-10T01:01:00Z',
     'user': 'http://testserver/api/users/1/',
