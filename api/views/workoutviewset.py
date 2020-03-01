@@ -1,4 +1,8 @@
 from rest_framework import viewsets
+from rest_framework.response import Response
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
+from django.contrib.gis.db.models.functions import Distance
 from api.models.workout import Workout
 from api.serializers.workoutserializer import WorkoutSerializer, WorkoutSerializerExpanded
 
