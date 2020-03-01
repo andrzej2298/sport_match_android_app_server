@@ -2,21 +2,19 @@ from .models import User, Workout, Sport, UserSport
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-# HyperlinkedModelSerializer writes urls to resources instead of
-# the database ids to the output json, to write database ids use ModelSerializer instead
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
 
 
-class SportSerializer(serializers.HyperlinkedModelSerializer):
+class SportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sport
         fields = '__all__'
 
 
-class UserSportSerializer(serializers.HyperlinkedModelSerializer):
+class UserSportSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSport
         fields = '__all__'
@@ -28,7 +26,7 @@ class UserSportSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class WorkoutSerializer(serializers.HyperlinkedModelSerializer):
+class WorkoutSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['start'] > attrs['end']:
             raise serializers.ValidationError('end must occur after start')
