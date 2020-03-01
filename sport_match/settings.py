@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 
+if 'HEROKU' in os.environ:
+    import django_heroku
+    import dj_database_url
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -36,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'rest_framework',
+    'rest_framework_gis',
     'api',
 ]
 
@@ -72,15 +79,25 @@ WSGI_APPLICATION = 'sport_match.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'sport_match',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'db',
-    },
-}
+if 'HEROKU' in os.environ:
+    # Activate Django-Heroku
+    django_heroku.settings(locals())
+
+    DATABASES = {'default': dj_database_url.config()}
+    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+
+    GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH')
+    GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH')
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': 'sport_match',
+            'USER': 'postgres',
+            'PASSWORD': 'password',
+            'HOST': 'db',
+        },
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators

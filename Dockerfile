@@ -1,6 +1,6 @@
-FROM python:3.8-slim
+FROM python:3.8.1-slim
 RUN apt update && apt install curl ngrep gdal-bin -y
 WORKDIR /code
-COPY requirements.txt /code
-RUN pip install -r requirements.txt
+COPY requirements/base.txt /code/requirements/base.txt
+RUN pip install -r requirements/base.txt
 COPY . /code
