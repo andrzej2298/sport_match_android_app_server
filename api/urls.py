@@ -4,6 +4,8 @@ from .views.userviewset import UserViewSet
 from .views.workoutviewset import WorkoutViewSet, MatchingWorkoutViewSet
 from .views.sportviewset import SportViewSet
 from .views.usersportviewset import UserSportViewSet
+from .views.helloauthviewset import HelloView
+from .views.loginview import LoginView
 
 from . import views
 
@@ -20,6 +22,8 @@ router.register(
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('hello', HelloView.as_view()),
+    path('api-token-auth', LoginView.as_view()),
 ]
 
