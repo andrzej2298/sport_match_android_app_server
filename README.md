@@ -29,7 +29,18 @@ migrations folder to yourself instead of root.
 
 # API endpoints
 
-To see available API endpoints, run `firefox localhost:8000/api/`.
+Mock API endpoints are available at `firefox localhost:8000/api/`.
+
+# Mock API endpoints
+
+Mock API endpoints are available at `firefox localhost:8000/api/mock/`.
+
+# API documentation
+
+All of the allowed actions are shown in the `api_documentation.json`.
+To try them out (or add examples for a new action) install the
+[Insomnia HTTP Client](https://insomnia.rest/) and go to
+`Application > Preferences > Data` to import (or export) data.
 
 # Relevant links
 - [GeoDjango](https://docs.djangoproject.com/en/3.0/ref/contrib/gis/)

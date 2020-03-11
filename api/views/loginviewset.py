@@ -1,3 +1,4 @@
+from rest_framework import viewsets
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -19,4 +20,13 @@ class LoginView(ObtainAuthToken):
 
         return Response({
             'token': token.key,
+        })
+
+class MockLoginViewSet(viewsets.ViewSet):
+    """
+    API endpoint that allows users to log in.
+    """
+    def create(self, request):
+        return Response({
+            'token': '123456789123456789',
         })
