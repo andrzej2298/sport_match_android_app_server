@@ -5,6 +5,6 @@ def error(code, info=None):
     }
 
 
-BadLogin = error(1, 'Bad login.')
-BadUser = error(2, 'Bad user.')
-BadToken = error(19, 'Bad token.')
+BAD_USERNAME = error(1, 'Bad username.')
+BAD_USER = error(2, 'Bad user.')
+BAD_TOKEN = error(19, 'Bad token.')

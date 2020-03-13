@@ -5,14 +5,12 @@ from django.contrib.auth.models import User as DjangoUser
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='auth_user.username', read_only=False)
-    password = serializers.CharField(source='auth_user.password', read_only=False)
+    password = serializers.CharField(source='auth_user.password', read_only=False, write_only=True)
     email = serializers.CharField(source='auth_user.email', read_only=False)
-    first_name = serializers.CharField(source='auth_user.first_name', read_only=False)
-    last_name = serializers.CharField(source='auth_user.last_name', read_only=False)
 
     class Meta:
         model = User
-        fields = ['id', 'birth_date', 'gender', 'username', 'password', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'password', 'birth_date', 'gender', ]
 
     def update(self, instance, validated_data):
         auth_user_data = validated_data.pop('auth_user')

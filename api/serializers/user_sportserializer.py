@@ -1,4 +1,4 @@
-from api.models.usersport import UserSport
+from api.models.user_sport import UserSport
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 

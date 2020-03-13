@@ -1,11 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
 from api.models.workout import Workout
-from api.serializers.workoutserializer import WorkoutSerializer, WorkoutSerializerExpanded
+from api.serializers.workout_serializer import WorkoutSerializer, WorkoutSerializerExpanded
 
 
 class WorkoutViewSet(viewsets.ModelViewSet):
@@ -25,7 +26,6 @@ class MatchingWorkoutViewSet(viewsets.ViewSet):
     """
     API endpoint that allows matching workouts to be viewed.
     """
-
     def list(self, request):
         if 'lat' in request.query_params and 'lon' in request.query_params:
             reference_point = Point(
@@ -98,6 +98,7 @@ class MockWorkoutViewSet(viewsets.ViewSet):
     """
     API endpoint that allows users to view and update the workouts they are participating in.
     """
+    permission_classes = [AllowAny]
 
     def list(self, request):
         return Response([workout_info])
@@ -111,11 +112,11 @@ class MockWorkoutViewSet(viewsets.ViewSet):
         full_info['user_list'] = [
             {
                 'id': 78943107,
-                'login': 'Kot',
+                'username': 'Kot',
             },
             {
                 'id': 5411259,
-                'login': 'Pies',
+                'username': 'Pies',
             },
         ]
         return Response(full_info)

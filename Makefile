@@ -12,3 +12,5 @@ add_initial_migration: api/models/
 	# because docker containers execute with root privileges
 	sudo chown $(USER) -R api/migrations
 
+test: api/models/
+	docker-compose exec api ./manage.py test

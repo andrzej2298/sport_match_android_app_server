@@ -2,7 +2,8 @@ from rest_framework import viewsets
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from ..errors import BadLogin
+from rest_framework.permissions import AllowAny
+from ..errors import BAD_USERNAME
 
 
 class LoginView(ObtainAuthToken):
@@ -13,7 +14,7 @@ class LoginView(ObtainAuthToken):
         )
 
         if not serializer.is_valid():
-            return Response(BadLogin)
+            return Response(BAD_USERNAME)
 
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
@@ -26,6 +27,7 @@ class MockLoginViewSet(viewsets.ViewSet):
     """
     API endpoint that allows users to log in.
     """
+    permission_classes = [AllowAny]
     def create(self, request):
         return Response({
             'token': '123456789123456789',

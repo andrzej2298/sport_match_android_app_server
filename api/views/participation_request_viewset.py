@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
 
 participation_request = {
@@ -7,7 +8,7 @@ participation_request = {
     'workout': 1,
     'user': {
         'id': 1,
-        'login': 'user97',
+        'username': 'user97',
     },
     'message': 'bardzo chcialbym biegac tak jak wy'
 }
@@ -17,6 +18,7 @@ class MockParticipationRequestViewSet(viewsets.ViewSet):
     """
     API endpoint that allows users to request participation in a workout.
     """
+    permission_classes = [AllowAny]
 
     def list(self, request):
         return Response([participation_request])
