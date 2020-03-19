@@ -1,7 +1,7 @@
 from api.models.workout import Workout
 from rest_framework import serializers
-from .userserializer import UserSerializer
-from .sportserializer import SportSerializer
+from .user_serializer import UserSerializer
+from .sport_serializer import SportSerializer
 
 class WorkoutSerializer(serializers.ModelSerializer):
     def validate(self, attrs):

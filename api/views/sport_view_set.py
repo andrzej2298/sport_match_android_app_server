@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from api.models.sport import Sport
-from api.serializers.sportserializer import SportSerializer
+from api.serializers.sport_serializer import SportSerializer
+from rest_framework.permissions import AllowAny
 
 class SportViewSet(viewsets.ModelViewSet):
     """
