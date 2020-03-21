@@ -2,30 +2,58 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
+from rest_framework import mixins, filters
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, IsoDateTimeFromToRangeFilter
 from api.models.workout import Workout
 from api.serializers.workout_serializer import WorkoutSerializer, WorkoutSerializerExpanded
 
 
-class WorkoutViewSet(viewsets.ModelViewSet):
+class HostedWorkoutViewSet(mixins.ListModelMixin,
+                           mixins.RetrieveModelMixin,
+                           mixins.CreateModelMixin,
+                           mixins.UpdateModelMixin,
+                           viewsets.GenericViewSet):
     """
-    API endpoint that allows workouts to be viewed or edited.
+    API endpoint that allows workouts hosted by user to be viewed or edited.
+    """
+    serializer_class = WorkoutSerializer
+
+    def create(self, request):
+        request.data['user'] = request.user.id
+        return super().create(request)
+
+    def get_queryset(self):
+        return Workout.objects.filter(user__id=self.request.user.id)
+
+
+class DateFilter(FilterSet):
+    start_time = IsoDateTimeFromToRangeFilter()
+
+    class Meta:
+        model = Workout
+        fields = ['start_time']
+
+
+class WorkoutViewSet(mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
+    """
+    API endpoint that allows specific workouts to be viewed or edited.
     """
     queryset = Workout.objects.all()
-
-    def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'retrieve':
-            return WorkoutSerializerExpanded
-        else:
-            return WorkoutSerializer
+    serializer_class = WorkoutSerializer
+    filter_backends = [DjangoFilterBackend]
+    filter_class = DateFilter
 
 
 class MatchingWorkoutViewSet(viewsets.ViewSet):
     """
     API endpoint that allows matching workouts to be viewed.
     """
+
     def list(self, request):
         if 'lat' in request.query_params and 'lon' in request.query_params:
             reference_point = Point(

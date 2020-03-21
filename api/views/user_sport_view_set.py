@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from api.models.user_sport import UserSport
-from api.serializers.user_sportserializer import UserSportSerializer
+from api.serializers.user_sport_serializer import UserSportSerializer
 
 class UserSportViewSet(viewsets.ModelViewSet):
     """

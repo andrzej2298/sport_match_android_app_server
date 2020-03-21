@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'birth_date', 'gender', ]
+        fields = ['id', 'username', 'email', 'password', 'birth_date', 'gender', 'description', 'phone_number']
 
     def update(self, instance, validated_data):
         auth_user_data = validated_data.pop('auth_user')

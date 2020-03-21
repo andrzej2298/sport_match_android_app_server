@@ -23,11 +23,13 @@ class LoginView(ObtainAuthToken):
             'token': token.key,
         })
 
+
 class MockLoginViewSet(viewsets.ViewSet):
     """
     API endpoint that allows users to log in.
     """
     permission_classes = [AllowAny]
+
     def create(self, request):
         return Response({
             'token': '123456789123456789',

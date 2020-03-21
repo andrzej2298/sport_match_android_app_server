@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework import routers
 from .views.login_view_set import LoginView
 from .views.user_view_set import UserViewSet, CreateUserViewSet
-from .views.workout_view_set import WorkoutViewSet, MatchingWorkoutViewSet
+from .views.workout_view_set import WorkoutViewSet, HostedWorkoutViewSet, MatchingWorkoutViewSet
 from .views.sport_view_set import SportViewSet
 from .views.user_sport_view_set import UserSportViewSet
 
@@ -25,8 +25,9 @@ mock_router.register(
 )
 
 router.register(r'register', CreateUserViewSet)
-router.register(r'users', UserViewSet)
-router.register(r'workouts', WorkoutViewSet)
+router.register(r'users', UserViewSet, basename='users')
+router.register(r'workouts', WorkoutViewSet, basename='workouts')
+router.register(r'hosted_workouts', HostedWorkoutViewSet, basename='hosted_workouts')
 router.register(r'sports', SportViewSet)
 router.register(r'user_sports', UserSportViewSet)
 router.register(
@@ -37,7 +38,6 @@ router.register(
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('mock/', include(mock_router.urls)),
     path('login/', LoginView.as_view()),
 ]

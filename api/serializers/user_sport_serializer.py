@@ -2,6 +2,7 @@ from api.models.user_sport import UserSport
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+
 class UserSportSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSport
@@ -12,4 +13,3 @@ class UserSportSerializer(serializers.ModelSerializer):
                 fields=['user', 'sport']
             )
         ]
-        

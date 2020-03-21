@@ -1,5 +1,5 @@
 delete_migrations: api/models/
-	rm -rf api/migrations
+	rm -rf api/migrations/0001_initial.py
 	docker-compose kill db
 	docker-compose rm db
 	docker-compose up -d
