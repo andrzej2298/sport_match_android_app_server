@@ -1,7 +1,7 @@
 from django.db import models
-from .constants import GENDERS
 from django.contrib.auth.models import User as DjangoUser
 from django.core.validators import RegexValidator
+from .constants import GENDERS
 
 
 class User(models.Model):
