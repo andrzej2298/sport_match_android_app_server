@@ -26,7 +26,7 @@ class TestBase(APITestCase):
         return self.add_row(user, '/api/register/', success)
 
     def add_workout(self, workout, success=True) -> int:
-        return self.add_row(workout, '/api/workouts/', success)
+        return self.add_row(workout, '/api/hosted_workouts/', success)
 
     def add_user_sport(self, user_sport, success=True) -> int:
         return self.add_row(user_sport, '/api/user_sports/', success)
@@ -42,7 +42,6 @@ class TestBase(APITestCase):
             self.assertEqual(status_code, expected_code)
         else:
             self.assertNotEqual(status_code, expected_code)
-
 
     def add_row(self, item, url, success) -> int:
         response = self.client.post(url, item, format='json')

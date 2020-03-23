@@ -1,10 +1,7 @@
 from django.db import models
 from django.contrib.gis.db import models as geo_models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from .constants import WORKOUT_GENDER_PREFERENCES, EITHER
-
-PROFICIENCY_VALIDATORS = [MinValueValidator(0), MaxValueValidator(2)]
-AGE_VALIDATORS = [MinValueValidator(0), MaxValueValidator(120)]
+from .validators import PROFICIENCY_VALIDATORS, AGE_VALIDATORS, MAX_PEOPLE_VALIDATORS
 
 
 class Workout(geo_models.Model):
@@ -30,7 +27,7 @@ class Workout(geo_models.Model):
     # would have to be added to Meta to prevent full scans of the table
     location = geo_models.PointField()
     location_name = models.CharField(max_length=20, default='')
-    max_people = models.IntegerField(validators=[MinValueValidator(2)], null=True)
+    max_people = models.IntegerField(validators=MAX_PEOPLE_VALIDATORS, null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     age_min = models.IntegerField(validators=AGE_VALIDATORS, default=0)

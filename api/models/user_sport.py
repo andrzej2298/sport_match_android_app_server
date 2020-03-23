@@ -1,8 +1,6 @@
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
-from django.core.validators import MinValueValidator, MaxValueValidator
-
-PROFICIENCY_VALIDATORS = [MinValueValidator(2), MaxValueValidator(10)]
+from .validators import PROFICIENCY_VALIDATORS
 
 
 class UserSport(models.Model):
