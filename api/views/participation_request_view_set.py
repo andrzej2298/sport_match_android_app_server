@@ -20,6 +20,7 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
     def update(self, request, *args, **kwargs):
         raise exceptions.MethodNotAllowed(method='PUT')
 
+    # TODO can change status only once
     def partial_update(self, request, pk=None):
         if 'user' in request.data:
             del request.data['user']
@@ -31,6 +32,8 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
         request.data['user'] = request.user.id
         if 'status' in request.data:
             del request.data['status']
+        if 'seen' in request.data:
+            del request.data['seen']
         return super().create(request)
 
     def get_queryset(self):

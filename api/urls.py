@@ -2,7 +2,9 @@ from django.urls import path, include
 from rest_framework import routers
 from .views.login_view_set import LoginView
 from .views.user_view_set import UserViewSet, CreateUserViewSet
-from .views.workout_view_set import WorkoutViewSet, HostedWorkoutViewSet, MatchingWorkoutViewSet
+from .views.workout_view_set import WorkoutViewSet, PendingWorkoutViewSet, HostedWorkoutViewSet, \
+    RecentlyAcceptedWorkoutViewSet, RecentlyRejectedWorkoutViewSet
+from .views.suggestions_wiew_set import SuggestedWorkoutViewSet
 from .views.sport_view_set import SportViewSet
 from .views.user_sport_view_set import UserSportViewSet
 from .views.participation_request_view_set import ParticipationRequestViewSet
@@ -20,23 +22,19 @@ mock_router.register(r'login', MockLoginViewSet, basename='login')
 mock_router.register(r'register', MockRegisterViewSet, basename='register')
 mock_router.register(r'users', MockUserViewset, basename='users')
 mock_router.register(r'workouts', MockWorkoutViewSet, basename='workouts')
-mock_router.register(
-    r'participation_requests', MockParticipationRequestViewSet,
-    basename='participation_requests'
-)
+mock_router.register(r'participation_requests', MockParticipationRequestViewSet, basename='participation_requests')
 
 router.register(r'register', CreateUserViewSet)
 router.register(r'users', UserViewSet, basename='users')
 router.register(r'workouts', WorkoutViewSet, basename='workouts')
 router.register(r'hosted_workouts', HostedWorkoutViewSet, basename='hosted_workouts')
+router.register(r'pending_workouts', PendingWorkoutViewSet, basename='pending_workouts')
+router.register(r'recently_accepted_workouts', RecentlyAcceptedWorkoutViewSet, basename='recently_accepted')
+router.register(r'recently_rejected_workouts', RecentlyRejectedWorkoutViewSet, basename='recently_rejected')
+router.register(r'suggested_workouts', SuggestedWorkoutViewSet, basename='suggested_workouts')
 router.register(r'sports', SportViewSet)
 router.register(r'user_sports', UserSportViewSet)
 router.register(r'participation_requests', ParticipationRequestViewSet, basename='participation_requests')
-router.register(
-    r'matching_workouts',
-    MatchingWorkoutViewSet,
-    basename='matching_workouts'
-)
 
 urlpatterns = [
     path('', include(router.urls)),

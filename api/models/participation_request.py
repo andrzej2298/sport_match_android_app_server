@@ -9,6 +9,7 @@ class ParticipationRequest(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     workout = models.ForeignKey('Workout', on_delete=models.CASCADE)
     status = models.CharField(max_length=1, choices=STATUSES, default=PENDING)
+    seen = models.BooleanField(default=False)
 
     class Meta:
         constraints = [

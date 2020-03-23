@@ -1,14 +1,15 @@
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from rest_framework import mixins
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
 from django_filters.rest_framework import FilterSet, IsoDateTimeFromToRangeFilter
 from api.models.workout import Workout
+from api.models.participation_request import ParticipationRequest
 from api.serializers.workout_serializer import WorkoutSerializer, WorkoutSerializerExpanded
+from api.models.constants import PENDING, ACCEPTED, REJECTED
 
 
 class HostedWorkoutViewSet(mixins.ListModelMixin,
@@ -27,6 +28,57 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         return Workout.objects.filter(user__id=self.request.user.id)
+
+
+class PendingWorkoutViewSet(mixins.ListModelMixin,
+                            viewsets.GenericViewSet):
+    """
+    API endpoint that allows workouts pending approval to be viewed or edited.
+    """
+    serializer_class = WorkoutSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return {
+            request.workout for request in
+            ParticipationRequest.objects.filter(workout__user=user_id, status=PENDING).select_related('workout')
+        }
+
+
+class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
+                                     viewsets.GenericViewSet):
+    """
+    API endpoint that allows recently accepted workouts to be viewed or edited.
+    """
+    serializer_class = WorkoutSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        relevant_requests = ParticipationRequest.objects.filter(workout__user=user_id, status=ACCEPTED, seen=False)
+        recently_accepted = {
+            request.workout for request in relevant_requests.select_related('workout')
+        }
+        relevant_requests.update(seen=True)
+
+        return recently_accepted
+
+
+class RecentlyRejectedWorkoutViewSet(mixins.ListModelMixin,
+                                     viewsets.GenericViewSet):
+    """
+    API endpoint that allows recently rejected workouts to be viewed or edited.
+    """
+    serializer_class = WorkoutSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        relevant_requests = ParticipationRequest.objects.filter(workout__user=user_id, status=REJECTED, seen=False)
+        recently_accepted = {
+            request.workout for request in relevant_requests.select_related('workout')
+        }
+        relevant_requests.update(seen=True)
+
+        return recently_accepted
 
 
 class DateFilter(FilterSet):
