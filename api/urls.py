@@ -33,7 +33,7 @@ router.register(r'recently_accepted_workouts', RecentlyAcceptedWorkoutViewSet, b
 router.register(r'recently_rejected_workouts', RecentlyRejectedWorkoutViewSet, basename='recently_rejected')
 router.register(r'suggested_workouts', SuggestedWorkoutViewSet, basename='suggested_workouts')
 router.register(r'sports', SportViewSet)
-router.register(r'user_sports', UserSportViewSet)
+router.register(r'user_sports', UserSportViewSet, basename='user_sports')
 router.register(r'participation_requests', ParticipationRequestViewSet, basename='participation_requests')
 
 urlpatterns = [

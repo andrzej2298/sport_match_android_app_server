@@ -1,13 +1,13 @@
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.core.validators import MinValueValidator, MaxValueValidator
-from .constants import WORKOUT_GENDER_PREFERENCES, EITHER
 
 PROFICIENCY_VALIDATORS = [MinValueValidator(2), MaxValueValidator(10)]
 
+
 class UserSport(models.Model):
     user = models.ForeignKey(
-        'User',
+        'User', related_name='sport_list',
         on_delete=models.CASCADE,
     )
     sport = models.ForeignKey(

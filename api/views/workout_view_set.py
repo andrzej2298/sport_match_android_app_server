@@ -185,9 +185,9 @@ class MockWorkoutViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         full_info = dict(workout_info)
         full_info['author'] = {
-                                  'id': 2,
-                                  'name': 'John',
-                              },
+            'id': 2,
+            'name': 'John',
+        }
         full_info['user_list'] = [
             {
                 'id': 78943107,

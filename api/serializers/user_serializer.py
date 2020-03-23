@@ -1,16 +1,20 @@
 from api.models.user import User
 from rest_framework import serializers
 from django.contrib.auth.models import User as DjangoUser
+from .user_sport_serializer import UserSportSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='auth_user.username', read_only=False)
     password = serializers.CharField(source='auth_user.password', read_only=False, write_only=True)
     email = serializers.CharField(source='auth_user.email', read_only=False)
+    sport_list = UserSportSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'birth_date', 'gender', 'description', 'phone_number']
+        fields = [
+            'id', 'username', 'email', 'password', 'birth_date', 'sport_list', 'gender', 'description', 'phone_number'
+        ]
 
     def update(self, instance, validated_data):
         auth_user_data = validated_data.pop('auth_user')
