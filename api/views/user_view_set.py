@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from api.models.user import User
-from api.serializers.user_serializer import UserSerializer
+from api.serializers.user_serializer import UserSerializer, OtherUserSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework import mixins
 
@@ -14,21 +14,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
 
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    # def get_object(self):
-    #     from sys import stderr
-    #     pk = self.request.parser_context['kwargs']['pk']
-    #     if pk == 'me':
-    #         return User.objects.get(id=self.request.user.id)
-    #     else:
-    #         try:
-    #             user_id = int(pk)
-    #             user = User.objects.get(id=user_id)
-    #             print(user, file=stderr)
-    #             return user
-    #         except ValueError:
-    #             return None
+    serializer_class = OtherUserSerializer
 
     @action(methods=['get'], detail=False)
     def me(self, request):

@@ -1,5 +1,6 @@
-from api.models.participation_request import ParticipationRequest
 from rest_framework import serializers
+from ..models.participation_request import ParticipationRequest
+from .user_serializer import BasicDataUserSerializer
 
 
 class ParticipationRequestSerializer(serializers.ModelSerializer):
@@ -13,3 +14,7 @@ class ParticipationRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParticipationRequest
         fields = '__all__'
+
+
+class ExpandedParticipationRequestSerializer(ParticipationRequestSerializer):
+    user = BasicDataUserSerializer()

@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import mixins
 from api.models.participation_request import ParticipationRequest
-from api.serializers.participation_request_serializer import ParticipationRequestSerializer
+from api.serializers.participation_request_serializer import ParticipationRequestSerializer,\
+    ExpandedParticipationRequestSerializer
 
 
 class ParticipationRequestViewSet(mixins.ListModelMixin,
@@ -26,6 +27,8 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
             del request.data['user']
         if 'workout' in request.data:
             del request.data['workout']
+        if 'seen' in request.data:
+            del request.data['seen']
         return super().update(request, partial=True)
 
     def create(self, request):
@@ -37,7 +40,16 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
         return super().create(request)
 
     def get_queryset(self):
-        return ParticipationRequest.objects.filter(user__id=self.request.user.id)
+        if self.action == 'create':
+            return ParticipationRequest.objects.filter(user__id=self.request.user.id)
+        else:
+            return ParticipationRequest.objects.filter(workout__user__id=self.request.user.id)
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ParticipationRequestSerializer
+        else:
+            return ExpandedParticipationRequestSerializer
 
 
 participation_request = {

@@ -30,6 +30,18 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
         return Workout.objects.filter(user__id=self.request.user.id)
 
 
+def get_request_related_workouts(**kwargs):
+    workouts = {
+        request.workout for request in
+        ParticipationRequest.objects.filter(**kwargs).select_related('workout')
+    }
+    from sys import stderr
+    print('-------------- BEGIN', file=stderr)
+    print(workouts, file=stderr)
+    print('-------------- END', file=stderr)
+    return workouts
+
+
 class PendingWorkoutViewSet(mixins.ListModelMixin,
                             viewsets.GenericViewSet):
     """
@@ -38,11 +50,7 @@ class PendingWorkoutViewSet(mixins.ListModelMixin,
     serializer_class = WorkoutSerializer
 
     def get_queryset(self):
-        user_id = self.request.user.id
-        return {
-            request.workout for request in
-            ParticipationRequest.objects.filter(workout__user=user_id, status=PENDING).select_related('workout')
-        }
+        return get_request_related_workouts(user__id=self.request.user.id, status=PENDING)
 
 
 class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
@@ -54,10 +62,11 @@ class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         user_id = self.request.user.id
-        relevant_requests = ParticipationRequest.objects.filter(workout__user=user_id, status=ACCEPTED, seen=False)
+        relevant_requests = ParticipationRequest.objects.filter(user__id=user_id, status=ACCEPTED, seen=False)
         recently_accepted = {
             request.workout for request in relevant_requests.select_related('workout')
         }
+
         relevant_requests.update(seen=True)
 
         return recently_accepted
@@ -72,7 +81,7 @@ class RecentlyRejectedWorkoutViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         user_id = self.request.user.id
-        relevant_requests = ParticipationRequest.objects.filter(workout__user=user_id, status=REJECTED, seen=False)
+        relevant_requests = ParticipationRequest.objects.filter(user__id=user_id, status=REJECTED, seen=False)
         recently_accepted = {
             request.workout for request in relevant_requests.select_related('workout')
         }
@@ -94,10 +103,23 @@ class WorkoutViewSet(mixins.RetrieveModelMixin,
                      viewsets.GenericViewSet):
     """
     API endpoint that allows specific workouts to be viewed or edited.
+    Filtering by date and time is allowed.
     """
-    queryset = Workout.objects.all()
     serializer_class = WorkoutSerializer
     filter_class = DateFilter
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        hosted = Workout.objects.filter(user__id=user_id)
+
+        accepted_requests = [
+            request.workout.id
+            for request in ParticipationRequest.objects.filter(user__id=user_id, status=ACCEPTED)
+        ]
+        # filtering after union is not allowed, so filter_queryset has to be applied here
+        taking_part_in = Workout.objects.filter(id__in=accepted_requests)
+
+        return hosted | taking_part_in
 
 
 class MatchingWorkoutViewSet(viewsets.ViewSet):
