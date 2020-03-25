@@ -39,9 +39,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @me.mapping.put
     def full_update_me(self, request, *args, **kwargs):
-        import sys
-        print(request.user.id, file=sys.stderr)
-        print(self.request.user.id, file=sys.stderr)
         kwargs['partial'] = False
         return self.update_me(request, *args, **kwargs)
 

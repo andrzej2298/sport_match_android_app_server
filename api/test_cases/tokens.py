@@ -10,7 +10,6 @@ class TokenTest(TestBase):
         # first try without permissions
         self.add_user_sport(JOHNS_RUNNING, success=False)
 
-        print('----------------------')
         # try with permissions
         self.authenticate_user()
         self.add_user_sport(JOHNS_RUNNING, success=True)

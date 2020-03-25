@@ -35,10 +35,6 @@ def get_request_related_workouts(**kwargs):
         request.workout for request in
         ParticipationRequest.objects.filter(**kwargs).select_related('workout')
     }
-    from sys import stderr
-    print('-------------- BEGIN', file=stderr)
-    print(workouts, file=stderr)
-    print('-------------- END', file=stderr)
     return workouts
 
 
