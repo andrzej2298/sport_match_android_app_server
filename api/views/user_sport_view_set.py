@@ -1,4 +1,4 @@
-from rest_framework import mixins, viewsets
+from rest_framework import viewsets
 from api.models.user_sport import UserSport
 from api.serializers.user_sport_serializer import UserSportSerializer
 

@@ -26,13 +26,13 @@ class Workout(geo_models.Model):
     # normally an index on the location field
     # would have to be added to Meta to prevent full scans of the table
     location = geo_models.PointField()
-    location_name = models.CharField(max_length=20, default='')
+    location_name = models.CharField(max_length=100, default='')
     max_people = models.IntegerField(validators=MAX_PEOPLE_VALIDATORS, null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    age_min = models.IntegerField(validators=AGE_VALIDATORS, default=0)
-    age_max = models.IntegerField(validators=AGE_VALIDATORS, default=0)
-    description = models.CharField(max_length=250, default='')
+    age_min = models.IntegerField(validators=AGE_VALIDATORS, null=True, default=None)
+    age_max = models.IntegerField(validators=AGE_VALIDATORS, null=True, default=None)
+    description = models.CharField(max_length=100, default='')
 
     def __str__(self):
         return self.name

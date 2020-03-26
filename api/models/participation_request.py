@@ -4,7 +4,7 @@ from .constants import STATUSES, PENDING
 
 
 class ParticipationRequest(models.Model):
-    message = models.CharField(max_length=50)
+    message = models.CharField(max_length=100)
 
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     workout = models.ForeignKey('Workout', on_delete=models.CASCADE)
