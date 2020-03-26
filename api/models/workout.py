@@ -1,9 +1,8 @@
 from django.db import models
 from django.contrib.gis.db import models as geo_models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from .constants import WORKOUT_GENDER_PREFERENCES, EITHER
+from .validators import PROFICIENCY_VALIDATORS, AGE_VALIDATORS, MAX_PEOPLE_VALIDATORS
 
-PROFICIENCY_VALIDATORS = [MinValueValidator(2), MaxValueValidator(10)]
 
 class Workout(geo_models.Model):
     name = models.CharField(max_length=50)
@@ -15,10 +14,10 @@ class Workout(geo_models.Model):
         'Sport',
         on_delete=models.CASCADE,
     )
-    level = models.IntegerField(
+    desired_proficiency = models.IntegerField(
         validators=PROFICIENCY_VALIDATORS,
     )
-    preferred_gender = models.CharField(
+    expected_gender = models.CharField(
         max_length=1,
         choices=WORKOUT_GENDER_PREFERENCES,
         default=EITHER,
@@ -27,10 +26,13 @@ class Workout(geo_models.Model):
     # normally an index on the location field
     # would have to be added to Meta to prevent full scans of the table
     location = geo_models.PointField()
-    max_people = models.IntegerField(validators=[MinValueValidator(2)], null=True)
-    start = models.DateTimeField()
-    end = models.DateTimeField()
-    description = models.CharField(max_length=250, default='')
+    location_name = models.CharField(max_length=100, default='')
+    max_people = models.IntegerField(validators=MAX_PEOPLE_VALIDATORS, null=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    age_min = models.IntegerField(validators=AGE_VALIDATORS, null=True, default=None)
+    age_max = models.IntegerField(validators=AGE_VALIDATORS, null=True, default=None)
+    description = models.CharField(max_length=100, default='')
 
     def __str__(self):
         return self.name

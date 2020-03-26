@@ -2,21 +2,45 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from api.models.user import User
-from api.serializers.user_serializer import UserSerializer
+from api.serializers.user_serializer import UserSerializer, OtherUserSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework import mixins
 
 
-class UserViewSet(mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  mixins.DestroyModelMixin,
-                  mixins.ListModelMixin,
-                  viewsets.GenericViewSet):
+# TODO permissions
+class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
+
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = OtherUserSerializer
+
+    @action(methods=['get'], detail=False)
+    def me(self, request):
+        queryset = User.objects.get(id=request.user.id)
+        serializer = UserSerializer(queryset)
+        return Response(serializer.data)
+
+    def update_me(self, request, *args, **kwargs):
+        instance = User.objects.get(id=request.user.id)
+        serializer = UserSerializer(instance, data=request.data, partial=kwargs['partial'])
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    # TODO put and patch currently don't work properly
+    #   it seems that changing the password breaks some things
+    #   changing the username should also probably be disallowed
+    @me.mapping.patch
+    def partial_update_me(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update_me(request, *args, **kwargs)
+
+    @me.mapping.put
+    def full_update_me(self, request, *args, **kwargs):
+        kwargs['partial'] = False
+        return self.update_me(request, *args, **kwargs)
 
 
 class CreateUserViewSet(mixins.CreateModelMixin,
@@ -25,6 +49,7 @@ class CreateUserViewSet(mixins.CreateModelMixin,
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
 
 user_info = {
     'id': 1,

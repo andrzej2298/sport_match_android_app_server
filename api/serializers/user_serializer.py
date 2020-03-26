@@ -1,16 +1,22 @@
 from api.models.user import User
 from rest_framework import serializers
 from django.contrib.auth.models import User as DjangoUser
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+from .user_sport_serializer import UserSportSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='auth_user.username', read_only=False)
     password = serializers.CharField(source='auth_user.password', read_only=False, write_only=True)
     email = serializers.CharField(source='auth_user.email', read_only=False)
+    sport_list = UserSportSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'birth_date', 'gender', ]
+        fields = [
+            'id', 'username', 'email', 'password', 'birth_date', 'sport_list', 'gender', 'description', 'phone_number'
+        ]
 
     def update(self, instance, validated_data):
         auth_user_data = validated_data.pop('auth_user')
@@ -35,3 +41,24 @@ class UserSerializer(serializers.ModelSerializer):
             **validated_data
         )
         return user
+
+
+class BasicDataUserSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username'
+        ]
+
+
+class OtherUserSerializer(UserSerializer):
+    age = serializers.SerializerMethodField()
+
+    def get_age(self, obj):
+        return relativedelta(datetime.now(), obj.birth_date).years
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'sport_list', 'gender', 'description', 'phone_number', 'age'
+        ]

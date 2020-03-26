@@ -1,31 +1,128 @@
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
+from django_filters.rest_framework import FilterSet, IsoDateTimeFromToRangeFilter
 from api.models.workout import Workout
+from api.models.participation_request import ParticipationRequest
 from api.serializers.workout_serializer import WorkoutSerializer, WorkoutSerializerExpanded
+from api.models.constants import PENDING, ACCEPTED, REJECTED
 
 
-class WorkoutViewSet(viewsets.ModelViewSet):
+class HostedWorkoutViewSet(mixins.ListModelMixin,
+                           mixins.RetrieveModelMixin,
+                           mixins.CreateModelMixin,
+                           mixins.UpdateModelMixin,
+                           viewsets.GenericViewSet):
     """
-    API endpoint that allows workouts to be viewed or edited.
+    API endpoint that allows workouts hosted by user to be viewed or edited.
     """
-    queryset = Workout.objects.all()
+    serializer_class = WorkoutSerializer
 
-    def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'retrieve':
-            return WorkoutSerializerExpanded
-        else:
-            return WorkoutSerializer
+    def create(self, request):
+        request.data['user'] = request.user.id
+        return super().create(request)
+
+    def get_queryset(self):
+        return Workout.objects.filter(user__id=self.request.user.id)
+
+
+def get_request_related_workouts(**kwargs):
+    workouts = {
+        request.workout for request in
+        ParticipationRequest.objects.filter(**kwargs).select_related('workout')
+    }
+    return workouts
+
+
+class PendingWorkoutViewSet(mixins.ListModelMixin,
+                            viewsets.GenericViewSet):
+    """
+    API endpoint that allows workouts pending approval to be viewed or edited.
+    """
+    serializer_class = WorkoutSerializer
+
+    def get_queryset(self):
+        return get_request_related_workouts(user__id=self.request.user.id, status=PENDING)
+
+
+class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
+                                     viewsets.GenericViewSet):
+    """
+    API endpoint that allows recently accepted workouts to be viewed or edited.
+    """
+    serializer_class = WorkoutSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        relevant_requests = ParticipationRequest.objects.filter(user__id=user_id, status=ACCEPTED, seen=False)
+        recently_accepted = {
+            request.workout for request in relevant_requests.select_related('workout')
+        }
+
+        relevant_requests.update(seen=True)
+
+        return recently_accepted
+
+
+class RecentlyRejectedWorkoutViewSet(mixins.ListModelMixin,
+                                     viewsets.GenericViewSet):
+    """
+    API endpoint that allows recently rejected workouts to be viewed or edited.
+    """
+    serializer_class = WorkoutSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        relevant_requests = ParticipationRequest.objects.filter(user__id=user_id, status=REJECTED, seen=False)
+        recently_accepted = {
+            request.workout for request in relevant_requests.select_related('workout')
+        }
+        relevant_requests.update(seen=True)
+
+        return recently_accepted
+
+
+class DateFilter(FilterSet):
+    start_time = IsoDateTimeFromToRangeFilter()
+
+    class Meta:
+        model = Workout
+        fields = ['start_time']
+
+
+class WorkoutViewSet(mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
+    """
+    API endpoint that allows specific workouts to be viewed or edited.
+    Filtering by date and time is allowed.
+    """
+    serializer_class = WorkoutSerializer
+    filter_class = DateFilter
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        hosted = Workout.objects.filter(user__id=user_id)
+
+        accepted_requests = [
+            request.workout.id
+            for request in ParticipationRequest.objects.filter(user__id=user_id, status=ACCEPTED)
+        ]
+        # filtering after union is not allowed, so filter_queryset has to be applied here
+        taking_part_in = Workout.objects.filter(id__in=accepted_requests)
+
+        return hosted | taking_part_in
 
 
 class MatchingWorkoutViewSet(viewsets.ViewSet):
     """
     API endpoint that allows matching workouts to be viewed.
     """
+
     def list(self, request):
         if 'lat' in request.query_params and 'lon' in request.query_params:
             reference_point = Point(
@@ -106,9 +203,9 @@ class MockWorkoutViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         full_info = dict(workout_info)
         full_info['author'] = {
-                                  'id': 2,
-                                  'name': 'John',
-                              },
+            'id': 2,
+            'name': 'John',
+        }
         full_info['user_list'] = [
             {
                 'id': 78943107,

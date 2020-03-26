@@ -1,6 +1,7 @@
 from django.db import models
-from .constants import GENDERS
 from django.contrib.auth.models import User as DjangoUser
+from django.core.validators import RegexValidator
+from .constants import GENDERS
 
 
 class User(models.Model):
@@ -9,14 +10,10 @@ class User(models.Model):
         on_delete=models.CASCADE
     )
 
-    # TODO phone_number (probably using an external library to validate it)
-
     birth_date = models.DateField()
-
-    gender = models.CharField(
-        max_length=1,
-        choices=GENDERS,
-    )
+    gender = models.CharField(max_length=1, choices=GENDERS)
+    description = models.CharField(max_length=200, default='')
+    phone_number = models.CharField(validators=[RegexValidator(regex=r'^\d{9}$')], max_length=9, default="")
 
     def __str__(self):
         return self.auth_user.username
