@@ -3,9 +3,9 @@ from api.models.sport import Sport
 from api.serializers.sport_serializer import SportSerializer
 
 
-class SportViewSet(viewsets.ModelViewSet):
+class SportViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API endpoint that allows sports to be viewed or edited.
+    API endpoint that allows sports to be viewed.
     """
 
     queryset = Sport.objects.all()
