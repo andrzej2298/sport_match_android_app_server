@@ -1,8 +1,10 @@
-from api.models.user import User
 from rest_framework import serializers
 from django.contrib.auth.models import User as DjangoUser
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
+
+from api.models.user import User
+from api.utils.time import get_current_age
 from .user_sport_serializer import UserSportSerializer
 
 
@@ -55,7 +57,7 @@ class OtherUserSerializer(UserSerializer):
     age = serializers.SerializerMethodField()
 
     def get_age(self, obj):
-        return relativedelta(datetime.now(), obj.birth_date).years
+        return get_current_age(obj.birth_date)
 
     class Meta:
         model = User
