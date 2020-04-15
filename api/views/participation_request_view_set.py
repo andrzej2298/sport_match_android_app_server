@@ -19,25 +19,36 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
     filterset_fields = ['workout']
 
     def update(self, request, *args, **kwargs):
-        raise exceptions.MethodNotAllowed(method='PUT')
+        if 'partial' not in kwargs or not kwargs['partial']:
+            raise exceptions.MethodNotAllowed(method='PUT')
+        else:
+            return super().update(request, *args, **kwargs)
 
-    # TODO can change status only once
-    def partial_update(self, request, pk=None):
-        if 'user' in request.data:
-            del request.data['user']
-        if 'workout' in request.data:
-            del request.data['workout']
-        if 'seen' in request.data:
-            del request.data['seen']
-        return super().update(request, partial=True)
+    def _remove_disallowed_fields(self, request):
+        if self.action == 'create':
+            disallowed_fields = {'status', 'seen'}
+        elif self.action == 'partial_update':
+            disallowed_fields = {'user', 'workout', 'seen'}
+        else:
+            disallowed_fields = {}
 
-    def create(self, request):
+        for field in disallowed_fields:
+            if field in request.data:
+                del request.data[field]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        request = None
+        if 'request' in context:
+            request = context['request']
+        if not (request and request.data and request.user):
+            return context
+
         request.data['user'] = request.user.id
-        if 'status' in request.data:
-            del request.data['status']
-        if 'seen' in request.data:
-            del request.data['seen']
-        return super().create(request)
+        self._remove_disallowed_fields(request)
+
+        return context
 
     def get_queryset(self):
         if self.action == 'create':

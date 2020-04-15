@@ -4,7 +4,7 @@ from .views.login_view_set import LoginView
 from .views.user_view_set import UserViewSet, CreateUserViewSet
 from .views.workout_view_set import WorkoutViewSet, PendingWorkoutViewSet, HostedWorkoutViewSet, \
     RecentlyAcceptedWorkoutViewSet, RecentlyRejectedWorkoutViewSet
-from .views.suggestions_wiew_set import SuggestedWorkoutViewSet
+from .views.suggestions_view_set import SuggestedWorkoutViewSet
 from .views.sport_view_set import SportViewSet
 from .views.user_sport_view_set import UserSportViewSet
 from .views.participation_request_view_set import ParticipationRequestViewSet
