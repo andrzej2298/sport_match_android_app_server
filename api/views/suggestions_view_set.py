@@ -5,7 +5,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 
 from api.models.workout import Workout
-from api.serializers.workout_serializer import WorkoutSerializer
+from api.serializers.workout_serializer import FullWorkoutSerializer
 from api.views.paginators import ResultPagination
 
 
@@ -14,7 +14,7 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows workout suggestions to be viewed.
     """
-    serializer_class = WorkoutSerializer
+    serializer_class = FullWorkoutSerializer
     filterset_fields = ['sport']
     pagination_class = ResultPagination
 
@@ -38,8 +38,8 @@ class MatchingWorkoutViewSet(viewsets.ViewSet):
             ).annotate(
                 distance=Distance('location', reference_point)
             ).order_by('distance')
-            serializer = WorkoutSerializer(queryset, context={'request': request}, many=True)
+            serializer = FullWorkoutSerializer(queryset, context={'request': request}, many=True)
             return Response(serializer.data)
         else:
-            serializer = WorkoutSerializer(Workout.objects.all(), context={'request': request}, many=True)
+            serializer = FullWorkoutSerializer(Workout.objects.all(), context={'request': request}, many=True)
             return Response(serializer.data)
