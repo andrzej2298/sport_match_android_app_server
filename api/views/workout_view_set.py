@@ -8,7 +8,7 @@ from django.contrib.gis.db.models.functions import Distance
 from django_filters.rest_framework import FilterSet, IsoDateTimeFromToRangeFilter
 from api.models.workout import Workout
 from api.models.participation_request import ParticipationRequest
-from api.serializers.workout_serializer import WorkoutSerializer, WorkoutSerializerExpanded
+from api.serializers.workout_serializer import FullWorkoutSerializer, BasicWorkoutSerializer
 from api.models.constants import PENDING, ACCEPTED, REJECTED
 
 
@@ -20,7 +20,7 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows workouts hosted by user to be viewed or edited.
     """
-    serializer_class = WorkoutSerializer
+    serializer_class = FullWorkoutSerializer
 
     def create(self, request):
         request.data['user'] = request.user.id
@@ -43,7 +43,7 @@ class PendingWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows workouts pending approval to be viewed or edited.
     """
-    serializer_class = WorkoutSerializer
+    serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
         return get_request_related_workouts(user__id=self.request.user.id, status=PENDING)
@@ -54,7 +54,7 @@ class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows recently accepted workouts to be viewed or edited.
     """
-    serializer_class = WorkoutSerializer
+    serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
         user_id = self.request.user.id
@@ -73,7 +73,7 @@ class RecentlyRejectedWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows recently rejected workouts to be viewed or edited.
     """
-    serializer_class = WorkoutSerializer
+    serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
         user_id = self.request.user.id
@@ -101,21 +101,27 @@ class WorkoutViewSet(mixins.RetrieveModelMixin,
     API endpoint that allows specific workouts to be viewed or edited.
     Filtering by date and time is allowed.
     """
-    serializer_class = WorkoutSerializer
     filter_class = DateFilter
 
     def get_queryset(self):
-        user_id = self.request.user.id
-        hosted = Workout.objects.filter(user__id=user_id)
+        if self.action == 'list':
+            user_id = self.request.user.id
+            hosted = Workout.objects.filter(user__id=user_id)
 
-        accepted_requests = [
-            request.workout.id
-            for request in ParticipationRequest.objects.filter(user__id=user_id, status=ACCEPTED)
-        ]
-        # filtering after union is not allowed, so filter_queryset has to be applied here
-        taking_part_in = Workout.objects.filter(id__in=accepted_requests)
+            accepted_requests = [
+                request.workout.id
+                for request in ParticipationRequest.objects.filter(user__id=user_id, status=ACCEPTED)
+            ]
+            # filtering after union is not allowed, so filter_queryset has to be applied here
+            taking_part_in = Workout.objects.filter(id__in=accepted_requests)
 
-        return hosted | taking_part_in
+            return hosted | taking_part_in
+        elif self.action == 'retrieve':
+            return Workout.objects.all()
+
+    def get_serializer_class(self):
+        # TODO permissions
+        return FullWorkoutSerializer
 
 
 class MatchingWorkoutViewSet(viewsets.ViewSet):
@@ -134,10 +140,10 @@ class MatchingWorkoutViewSet(viewsets.ViewSet):
             ).annotate(
                 distance=Distance('location', reference_point)
             ).order_by('distance')
-            serializer = WorkoutSerializer(queryset, context={'request': request}, many=True)
+            serializer = FullWorkoutSerializer(queryset, context={'request': request}, many=True)
             return Response(serializer.data)
         else:
-            serializer = WorkoutSerializer(Workout.objects.all(), context={'request': request}, many=True)
+            serializer = FullWorkoutSerializer(Workout.objects.all(), context={'request': request}, many=True)
             return Response(serializer.data)
 
 
