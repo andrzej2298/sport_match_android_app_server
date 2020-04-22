@@ -13,7 +13,7 @@ from api.models.workout import Workout
 from api.models.user import User
 from api.models.user_sport import UserSport
 from api.models.suggested_workout_history import SuggestedWorkoutHistoryItem, add_suggested_workout_to_history
-from api.serializers.workout_serializer import WorkoutSerializer, get_people_signed_for_a_workout
+from api.serializers.workout_serializer import FullWorkoutSerializer, get_people_signed_for_a_workout
 from api.serializers.suggestion_request_serializer import SuggestionRequestSerializer
 from api.utils.time import get_current_age
 from api.views.paginators import ResultPagination
@@ -24,7 +24,7 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows workout suggestions to be viewed.
     """
-    serializer_class = WorkoutSerializer
+    serializer_class = FullWorkoutSerializer
     filterset_fields = ['sport']
     pagination_class = ResultPagination
 
