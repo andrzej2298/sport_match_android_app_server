@@ -148,3 +148,27 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'basic_formatter': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': '/app/logs/model.log',
+            'formatter': 'basic_formatter',
+        },
+    },
+    'loggers': {
+        'ai_model': {
+            'handlers': ['file'],
+            'level': 'INFO',
+        },
+    },
+}

@@ -1,7 +1,10 @@
+import logging
 from rest_framework import viewsets, exceptions
 from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
 from rest_framework.permissions import AllowAny
 from rest_framework import mixins
+from api.models.user import User
 from api.models.participation_request import ParticipationRequest
 from api.serializers.participation_request_serializer import ParticipationRequestSerializer,\
     ExpandedParticipationRequestSerializer
@@ -18,11 +21,30 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
     serializer_class = ParticipationRequestSerializer
     filterset_fields = ['workout']
 
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+
+        if response.status_code == HTTP_201_CREATED:
+            user = User.objects.get(id=response.data["user"])
+            logging.getLogger('ai_model').info(f'USER JOIN REQUEST: {user.id}, '
+                                               f'[{user.location.x}, {user.location.y}], '
+                                               f'{response.data["workout"]}')
+
+        return response
+
     def update(self, request, *args, **kwargs):
         if 'partial' not in kwargs or not kwargs['partial']:
             raise exceptions.MethodNotAllowed(method='PUT')
         else:
-            return super().update(request, *args, **kwargs)
+            response = super().update(request, *args, **kwargs)
+
+            if response.status_code == HTTP_200_OK:
+                logging.getLogger('ai_model').info(f'REQUEST RESPONSE: {response.data["user"]["id"]}, '
+                                                   f'{response.data["user"]["location"]["coordinates"]}, '
+                                                   f'{response.data["status"]}, '
+                                                   f'{response.data["workout"]}')
+
+            return response
 
     def _remove_disallowed_fields(self, request):
         if self.action == 'create':

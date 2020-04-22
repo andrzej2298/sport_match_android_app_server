@@ -15,5 +15,4 @@ class SuggestionRequestSerializer(serializers.Serializer):
 
         return attrs
 
-    location = geo_serializers.GeometryField()
     sport = serializers.IntegerField(required=False)

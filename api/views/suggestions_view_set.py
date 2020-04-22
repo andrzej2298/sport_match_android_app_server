@@ -12,6 +12,7 @@ from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_
 from api.models.workout import Workout
 from api.models.user import User
 from api.models.user_sport import UserSport
+from api.models.ai_model import retrieve_model, update_or_create_model
 from api.models.suggested_workout_history import SuggestedWorkoutHistoryItem, add_suggested_workout_to_history
 from api.serializers.workout_serializer import FullWorkoutSerializer, get_people_signed_for_a_workout
 from api.serializers.suggestion_request_serializer import SuggestionRequestSerializer
@@ -35,12 +36,12 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
             Workout.objects
             .exclude(user=user)
             .filter(
-                location__distance_lte=(data['location'], D(km=100)),  # user within 100 km of the workout
+                location__distance_lte=(user.location, D(km=100)),  # user within 100 km of the workout
                 start_time__gte=Now(),  # workout hasn't started yet
                 age_min__lte=age,  # at least min age
                 age_max__gte=age,  # at most max age
             )
-            .annotate(distance=Distance('location', data['location']))
+            .annotate(distance=Distance('location', user.location))
         )
 
         if 'sport' in data and data['sport']:
@@ -50,9 +51,6 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
     def get_queryset(self):
         request_data = self.request.data
         user = User.objects.get(id=self.request.user.id)
-
-        if not request_data:
-            raise ValidationError('must provide at least location')
 
         serializer = SuggestionRequestSerializer(data=request_data)
         serializer.is_valid(raise_exception=True)
@@ -92,7 +90,7 @@ def _generate_workout_values(workouts, user, user_sports, request_data, now):
         distance_to_workout = w['distance']
         user_proficiency = _get_user_proficiency(user_sports, workout_sport_id)
         workout_has_ben_seen = _get_workout_has_ben_seen(user, w)
-        user_location = request_data['location']
+        user_location = user.location
 
         yield [
             w['id'],  # workout id
@@ -120,7 +118,9 @@ def _generate_workout_values(workouts, user, user_sports, request_data, now):
 # TODO function which should be replaced with a call to the
 #   machine learning model, this function adds a recommendation
 #   of value 1 for every workout
-def _get_workout_recommendations(array: np.array):
+def get_workout_recommendations(array: np.array):
+    model = retrieve_model()  # JSON model
+
     (rows, columns) = array.shape
     selected_columns = [False for _ in range(columns)]
     selected_columns[0] = True  # workout id
@@ -129,6 +129,9 @@ def _get_workout_recommendations(array: np.array):
     # append an extra column with dummy recommendations values
     result = np.ones((rows, 2))
     result[:, :-1] = array
+
+    update_or_create_model({**model, 'dummy': 'field'})  # update JSON model
+
     return result
 
 
@@ -140,7 +143,7 @@ def _get_recommended_workouts(workouts, user, request_data):
     if filtered.size == 0:
         return Workout.objects.none()
 
-    recommended = _get_workout_recommendations(filtered)
+    recommended = get_workout_recommendations(filtered)
 
     # sort recommendations by value
     sorted_by_recommendation_value = recommended[recommended[:, 1].argsort()][::-1]

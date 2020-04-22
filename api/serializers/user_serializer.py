@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User as DjangoUser
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
 
 from api.models.user import User
 from api.utils.time import get_current_age
@@ -17,7 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email', 'password', 'birth_date', 'sport_list', 'gender', 'description', 'phone_number'
+            'id', 'username', 'email', 'password', 'birth_date', 'sport_list', 'gender', 'description', 'phone_number',
+            'location'
         ]
 
     def update(self, instance, validated_data):
@@ -50,6 +49,14 @@ class BasicDataUserSerializer(UserSerializer):
         model = User
         fields = [
             'id', 'username'
+        ]
+
+
+class ParticipationRequestUserSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'location'
         ]
 
 
