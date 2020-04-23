@@ -164,10 +164,16 @@ LOGGING = {
             'filename': '/app/logs/model.log',
             'formatter': 'basic_formatter',
         },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO',
+            'formatter': 'basic_formatter'
+        },
     },
     'loggers': {
         'ai_model': {
-            'handlers': ['file'],
+            # disable file logging on Travis, it was breaking the builds (file couldn't be found)
+            'handlers': ['console'] if os.getenv('TRAVIS', False) else ['file'],
             'level': 'INFO',
         },
     },
