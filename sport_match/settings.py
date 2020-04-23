@@ -149,6 +149,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+TRAVIS_BUILD = os.getenv('TRAVIS', False)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -159,21 +161,20 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': '/app/logs/model.log',
-            'formatter': 'basic_formatter',
-        },
-        'console': {
+        'handler': {
             'class': 'logging.StreamHandler',
             'level': 'INFO',
             'formatter': 'basic_formatter'
+        } if TRAVIS_BUILD else {
+            'class': 'logging.FileHandler',
+            'filename': '/app/logs/model.log',
+            'formatter': 'basic_formatter',
         },
     },
     'loggers': {
         'ai_model': {
             # disable file logging on Travis, it was breaking the builds (file couldn't be found)
-            'handlers': ['console'] if os.getenv('TRAVIS', False) else ['file'],
+            'handlers': ['handler'],
             'level': 'INFO',
         },
     },
