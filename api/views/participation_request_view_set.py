@@ -1,4 +1,7 @@
 import logging
+import numpy as np
+from django.contrib.gis.db.models.functions import Distance
+from django.utils import timezone
 from rest_framework import viewsets, exceptions
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
@@ -6,8 +9,18 @@ from rest_framework.permissions import AllowAny
 from rest_framework import mixins
 from api.models.user import User
 from api.models.participation_request import ParticipationRequest
-from api.serializers.participation_request_serializer import ParticipationRequestSerializer,\
+from api.models.workout import Workout
+from api.serializers.participation_request_serializer import ParticipationRequestSerializer, \
     ExpandedParticipationRequestSerializer
+from api.models.suggested_workout_history import SuggestedWorkoutHistoryItem
+from api.models.user_sport import UserSport
+from api.views.suggestions_view_set import generate_workout_model_data, get_global_signed_ratio_squared, \
+    get_single_workout_model_data
+
+
+# TODO model training
+def train_model(recently_suggested: np.array, chosen_workout: np.array):
+    pass
 
 
 class ParticipationRequestViewSet(mixins.ListModelMixin,
@@ -26,9 +39,24 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
 
         if response.status_code == HTTP_201_CREATED:
             user = User.objects.get(id=response.data["user"])
+            workout = Workout.objects\
+                .annotate(distance=Distance('location', user.location)).get(id=response.data["workout"])
             logging.getLogger('ai_model').info(f'USER JOIN REQUEST: {user.id}, '
                                                f'[{user.location.x}, {user.location.y}], '
                                                f'{response.data["workout"]}')
+
+            recent_workout_ids = SuggestedWorkoutHistoryItem.objects.filter(user=user)
+            recent_workouts = Workout.objects.filter(id__in=recent_workout_ids)\
+                .annotate(distance=Distance('location', user.location))
+            user_sports = UserSport.objects.filter(user=user)
+            fullness = get_global_signed_ratio_squared()
+            picked_workout_data = np.array(
+                list(get_single_workout_model_data(workout, user, user_sports, fullness, timezone.now()))[0]
+            )
+            data = np.array(list(
+                generate_workout_model_data(recent_workouts, user, user_sports, fullness, timezone.now())
+            ))
+            train_model(data, picked_workout_data)
 
         return response
 

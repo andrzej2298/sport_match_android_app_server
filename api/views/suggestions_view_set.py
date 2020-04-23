@@ -4,7 +4,6 @@ from django.contrib.gis.measure import D
 from django.db.models.functions import Now
 from django.utils import timezone
 from rest_framework import mixins, viewsets
-from rest_framework.exceptions import ValidationError
 
 import numpy as np
 
@@ -57,7 +56,7 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
         data = serializer.validated_data
 
         filtered_workouts = self._initial_workout_filter(user, data)
-        return _get_recommended_workouts(filtered_workouts[:100], user, data)
+        return _get_recommended_workouts(filtered_workouts[:100], user)
 
 
 def _one_hot(i, value_range):
@@ -74,45 +73,60 @@ def _get_user_proficiency(user_sports, workout_sport_id):
 
 
 def _get_workout_has_ben_seen(user: User, workout: dict):
-    return int(SuggestedWorkoutHistoryItem.objects.filter(user=user, workout=workout['id']).exists())
+    return int(SuggestedWorkoutHistoryItem.objects.filter(user=user, workout=workout).exists())
 
 
 _POSSIBLE_PROFICIENCY_VALUES = MAX_PROFICIENCY_VALUE - MIN_PROFICIENCY_VALUE + 1
 _POSSIBLE_SPORTS = len(SPORTS)
 
 
-def _generate_workout_values(workouts, user, user_sports, request_data, now):
-    for w in workouts.values():
-        workout_start_time = w['start_time']
-        workout_end_time = w['end_time']
-        workout_location = w['location']
-        workout_sport_id = w['sport_id']
-        distance_to_workout = w['distance']
-        user_proficiency = _get_user_proficiency(user_sports, workout_sport_id)
-        workout_has_ben_seen = _get_workout_has_ben_seen(user, w)
-        user_location = user.location
+def get_global_signed_ratio_squared():
+    # for recent workouts calculate \frac{1}{N} \sum_{w \in recent}{(signed(w)/max(w))^2}
+    # where N is the number of workouts
+    recently_ended = Workout.objects.filter(end_time__lte=Now()).order_by('end_time')[:1000].values()
 
-        yield [
-            w['id'],  # workout id
-            (workout_start_time - now).seconds / 60,  # minutes to workout
-            distance_to_workout.m,  # metres to workout
-            workout_location.x,  # workout location x
-            workout_location.y,  # workout location y
-            user_location.x,  # user location x
-            user_location.y,  # user location y
-            workout_start_time.hour * 60 + workout_start_time.minute,  # minutes from midnight to start
-            workout_end_time.hour * 60 + workout_end_time.minute,  # minutes from midnight to end
-            *_one_hot(workout_start_time.weekday(), 7),  # day of the week
-            *_one_hot(workout_sport_id - 1, _POSSIBLE_SPORTS),  # sport_id
-            *_one_hot(w['desired_proficiency'], _POSSIBLE_PROFICIENCY_VALUES),  # workout sport proficiency
-            *_one_hot(user_proficiency, _POSSIBLE_PROFICIENCY_VALUES),  # user's proficiency
-            w['age_min'],
-            w['age_max'],
-            workout_has_ben_seen,
-            get_people_signed_for_a_workout(w['id']),  # people taking part in the workout
-            w['max_people'],
-            1,  # TODO common workouts, mock value for now
-        ]
+    return sum([
+        (get_people_signed_for_a_workout(workout['id']) / workout['max_people']) ** 2
+        for workout in recently_ended
+    ]) / len(recently_ended)
+
+
+def generate_workout_model_data(workouts, user, user_sports, fullness, now):
+    for w in workouts:
+        yield from get_single_workout_model_data(w, user, user_sports, fullness, now)
+
+
+def get_single_workout_model_data(w, user, user_sports, fullness, now):
+    workout_start_time = w.start_time
+    workout_end_time = w.end_time
+    workout_location = w.location
+    workout_sport_id = w.sport_id
+    distance_to_workout = w.distance
+    user_proficiency = _get_user_proficiency(user_sports, workout_sport_id)
+    workout_has_ben_seen = _get_workout_has_ben_seen(user, w)
+    user_location = user.location
+    yield [
+        w.id,  # workout id
+        (workout_start_time - now).seconds / 60,  # minutes to workout
+        distance_to_workout.m,  # metres to workout
+        workout_location.x,  # workout location x
+        workout_location.y,  # workout location y
+        user_location.x,  # user location x
+        user_location.y,  # user location y
+        workout_start_time.hour * 60 + workout_start_time.minute,  # minutes from midnight to start
+        workout_end_time.hour * 60 + workout_end_time.minute,  # minutes from midnight to end
+        *_one_hot(workout_start_time.weekday(), 7),  # day of the week
+        *_one_hot(workout_sport_id - 1, _POSSIBLE_SPORTS),  # sport_id
+        *_one_hot(w.desired_proficiency, _POSSIBLE_PROFICIENCY_VALUES),  # workout sport proficiency
+        *_one_hot(user_proficiency, _POSSIBLE_PROFICIENCY_VALUES),  # user's proficiency
+        w.age_min,
+        w.age_max,
+        workout_has_ben_seen,
+        get_people_signed_for_a_workout(w.id),  # people taking part in the workout
+        w.max_people,
+        1,  # TODO common workouts, mock value for now
+        fullness,
+    ]
 
 
 # TODO function which should be replaced with a call to the
@@ -135,9 +149,11 @@ def get_workout_recommendations(array: np.array):
     return result
 
 
-def _get_recommended_workouts(workouts, user, request_data):
+def _get_recommended_workouts(workouts, user):
     user_sports = UserSport.objects.filter(user=user)
-    filtered = np.array(list(_generate_workout_values(workouts, user, user_sports, request_data, timezone.now())))
+    fullness = get_global_signed_ratio_squared()
+
+    filtered = np.array(list(generate_workout_model_data(workouts, user, user_sports, fullness, timezone.now())))
 
     # no suggestions, prevent accessing non existent columns
     if filtered.size == 0:
