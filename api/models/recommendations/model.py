@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-N = 28
+N = 39
 
 class recommendation_model(tf.keras.Model):
 
