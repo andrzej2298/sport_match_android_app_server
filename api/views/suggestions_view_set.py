@@ -4,6 +4,7 @@ from django.contrib.gis.measure import D
 from django.db.models.functions import Now
 from django.utils import timezone
 from rest_framework import mixins, viewsets
+from models.recommendations import model
 
 import numpy as np
 
@@ -133,18 +134,19 @@ def get_single_workout_model_data(w, user, user_sports, fullness, now):
 #   machine learning model, this function adds a recommendation
 #   of value 1 for every workout
 def get_workout_recommendations(array: np.array):
-    model = retrieve_model()  # JSON model
+    weights = retrieve_model()  # JSON model
 
     (rows, columns) = array.shape
     selected_columns = [False for _ in range(columns)]
     selected_columns[0] = True  # workout id
-    array = array[:, selected_columns]  # filter only ids
+    op_selected_columns = [not x for x in selected_columns]
+    ids = array[:, selected_columns]
+    data = array[:, op_selected_columns]
 
     # append an extra column with dummy recommendations values
     result = np.ones((rows, 2))
-    result[:, :-1] = array
-
-    update_or_create_model({**model, 'dummy': 'field'})  # update JSON model
+    result[:, :-1] = ids
+    result[:, :-2] = model.get_ratings(weights, data)
 
     return result
 

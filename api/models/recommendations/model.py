@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 N = 39
+TRAIN_DATA_SIZE = 5
 
 class recommendation_model(tf.keras.Model):
 
@@ -20,20 +21,23 @@ class recommendation_model(tf.keras.Model):
         x = self.output_layer(x)
         return x  
 
-def get_new_model():
+def get_new_model(weights):
     model = recommendation_model()
     model.compile(optimizer=tf.keras.optimizers.Adam(0.01),
               loss='mae',
               metrics=['mse'])
     model.fit([[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]],[1], epochs=1, batch_size=1)
+
+    if len(weights) > 1:
+        model.set_weights(weights)
+
     return model
 
-def prepare_data(data):
-    return data
-
 def get_ratings(jsonWeights, data):
-    model = get_new_model()
+    model = get_new_model(jsonWeights)
+    return model.predict(data, batch_size=1)
 
-    model.set_weights(jsonWeights)
-    p_data = prepare_data(data)
-    return model.predict(p_data, batch_size=1)
+def train_model(jsonWeights, data_in, data_out):
+    model = get_new_model(jsonWeights)
+    model.fit(data_in, data_out, epochs=1, batch_size=1)
+    return model.get_weights()

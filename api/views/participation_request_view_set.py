@@ -16,11 +16,41 @@ from api.models.suggested_workout_history import SuggestedWorkoutHistoryItem
 from api.models.user_sport import UserSport
 from api.views.suggestions_view_set import generate_workout_model_data, get_global_signed_ratio_squared, \
     get_single_workout_model_data
+from api.models.ai_model import retrieve_model, update_or_create_model
+from random import sample
+from models.recommendations import model
 
+def get_ai_model_data(array: np.array):
+    return array[:, 1:]
 
-# TODO model training
+def filter_chosen_from_suggested(recently_suggested: np.array, chosen_workout: np.array):
+    return np.array(
+        list(
+            filter(lambda x: x[0] != chosen_workout[0,0], recently_suggested)
+        )
+    )
+
+def duplicate(x, n):
+    return [ x for _ in range(n) ]
+
 def train_model(recently_suggested: np.array, chosen_workout: np.array):
-    pass
+    weights = retrieve_model()
+    one_data_in = duplicate(get_ai_model_data(chosen_workout), model.TRAIN_DATA_SIZE)
+    filtered_recently_suggested = filter_chosen_from_suggested(recently_suggested, chosen_workout)
+    
+    if len(filtered_recently_suggested) > model.TRAIN_DATA_SIZE:
+        zero_data_in [
+            get_ai_model_data(x) for x in sample(filtered_recently_suggested, model.TRAIN_DATA_SIZE)
+        ]
+    else:
+        zero_data_in [
+            get_ai_model_data(x) for x in filtered_recently_suggested
+        ]
+
+    data_in = np.array(one_data_in + zero_data_in)
+    data_out = np.array(duplicate(1, len(one_data_in)) + duplicate(0, len(zero_data_in)))
+    new_weights = model.train_model(weights, data_in, data_out)
+    update_or_create_model(new_weights)
 
 
 class ParticipationRequestViewSet(mixins.ListModelMixin,
