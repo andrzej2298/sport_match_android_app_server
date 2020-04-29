@@ -4,10 +4,10 @@ from django.contrib.gis.measure import D
 from django.db.models.functions import Now
 from django.utils import timezone
 from rest_framework import mixins, viewsets
-from models.recommendations import model
 
 import numpy as np
 
+from api.models.recommendations import model
 from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_VALUE
 from api.models.workout import Workout
 from api.models.user import User

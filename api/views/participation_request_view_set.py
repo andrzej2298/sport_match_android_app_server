@@ -18,7 +18,7 @@ from api.views.suggestions_view_set import generate_workout_model_data, get_glob
     get_single_workout_model_data
 from api.models.ai_model import retrieve_model, update_or_create_model
 from random import sample
-from models.recommendations import model
+from api.models.recommendations import model
 
 def get_ai_model_data(array: np.array):
     return array[:, 1:]
@@ -39,11 +39,11 @@ def train_model(recently_suggested: np.array, chosen_workout: np.array):
     filtered_recently_suggested = filter_chosen_from_suggested(recently_suggested, chosen_workout)
     
     if len(filtered_recently_suggested) > model.TRAIN_DATA_SIZE:
-        zero_data_in [
+        zero_data_in = [
             get_ai_model_data(x) for x in sample(filtered_recently_suggested, model.TRAIN_DATA_SIZE)
         ]
     else:
-        zero_data_in [
+        zero_data_in = [
             get_ai_model_data(x) for x in filtered_recently_suggested
         ]
 
