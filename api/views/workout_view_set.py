@@ -1,5 +1,7 @@
+import logging
 from rest_framework import mixins, viewsets
 from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from django.contrib.gis.geos import Point
@@ -8,7 +10,7 @@ from django.contrib.gis.db.models.functions import Distance
 from django_filters.rest_framework import FilterSet, IsoDateTimeFromToRangeFilter
 from api.models.workout import Workout
 from api.models.participation_request import ParticipationRequest
-from api.serializers.workout_serializer import FullWorkoutSerializer, BasicWorkoutSerializer
+from api.serializers.workout_serializer import FullWorkoutSerializer
 from api.models.constants import PENDING, ACCEPTED, REJECTED
 
 
@@ -22,9 +24,14 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
     """
     serializer_class = FullWorkoutSerializer
 
-    def create(self, request):
+    def create(self, request, *args, **kwargs):
         request.data['user'] = request.user.id
-        return super().create(request)
+        response = super().create(request, *args, **kwargs)
+
+        if response.status_code == HTTP_201_CREATED:
+            logging.getLogger('ai_model').info(f'WORKOUT {response.data["id"]} CREATED')
+
+        return response
 
     def get_queryset(self):
         return Workout.objects.filter(user__id=self.request.user.id)

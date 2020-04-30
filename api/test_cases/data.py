@@ -1,3 +1,13 @@
+MIM_COORDINATES = [
+    52.211769,
+    20.982064
+]
+
+MIM_LOCATION = {
+    'type': 'Point',
+    'coordinates': MIM_COORDINATES,
+}
+
 JOHNS_CREDENTIALS = {
     'username': 'John',
     'password': 'secret',
@@ -10,26 +20,18 @@ JOHN = {
     'gender': 'M',
     'description': 'abc',
     'phone_number': '999999999',
+    'location': MIM_LOCATION,
 }
 
 JOHNS_RUNNING = {
     'level': 0,
     'sport': 1
 }
-
-MIM_COORDINATES = [
-    52.211769,
-    20.982064
-]
-
 MIM_WORKOUT = {
     'name': 'MIM',
     'max_people': 10,
     'desired_proficiency': 0,
-    'location': {
-        'type': 'Point',
-        'coordinates': MIM_COORDINATES,
-    },
+    'location': MIM_LOCATION,
     'location_name': 'mim',
     'level': 9,
     'start_time': '2020-10-10T01:01:00Z',

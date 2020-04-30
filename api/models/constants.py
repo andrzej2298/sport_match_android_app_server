@@ -21,3 +21,14 @@ STATUSES = [
     (ACCEPTED, 'accepted'),
     (REJECTED, 'rejected'),
 ]
+
+SPORTS = [
+    'running',
+    'swimming',
+    'cycling',
+    'other',
+]
+
+MIN_PROFICIENCY_VALUE = 0
+MAX_PROFICIENCY_VALUE = 2
+assert MIN_PROFICIENCY_VALUE < MAX_PROFICIENCY_VALUE

@@ -11,7 +11,7 @@ class BasicWorkoutSerializer(serializers.ModelSerializer):
     signed_people = serializers.SerializerMethodField()
 
     def get_signed_people(self, obj):
-        return 1 + ParticipationRequest.objects.filter(workout=obj.id, status=ACCEPTED).count()
+        return get_people_signed_for_a_workout(obj.id)
 
     @staticmethod
     def validate_less_than(smaller_key, greater_key, attrs, error_message):
@@ -26,6 +26,10 @@ class BasicWorkoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workout
         fields = '__all__'
+
+
+def get_people_signed_for_a_workout(workout):
+    return 1 + ParticipationRequest.objects.filter(workout=workout, status=ACCEPTED).count()
 
 
 class FullWorkoutSerializer(BasicWorkoutSerializer):

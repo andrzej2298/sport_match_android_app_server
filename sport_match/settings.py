@@ -148,3 +148,34 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+TRAVIS_BUILD = os.getenv('TRAVIS', False)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'basic_formatter': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'handler': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO',
+            'formatter': 'basic_formatter'
+        } if TRAVIS_BUILD else {
+            'class': 'logging.FileHandler',
+            'filename': '/app/logs/model.log',
+            'formatter': 'basic_formatter',
+        },
+    },
+    'loggers': {
+        'ai_model': {
+            # disable file logging on Travis, it was breaking the builds (file couldn't be found)
+            'handlers': ['handler'],
+            'level': 'INFO',
+        },
+    },
+}
