@@ -20,14 +20,9 @@ from api.models.ai_model import retrieve_model, update_or_create_model
 from random import sample
 from api.models.recommendations import model
 
-def get_ai_model_data(array: np.array):
-    return array[:, 1:]
-
 def filter_chosen_from_suggested(recently_suggested: np.array, chosen_workout: np.array):
-    return np.array(
-        list(
-            filter(lambda x: x[0] != chosen_workout[0,0], recently_suggested)
-        )
+    return list(
+        filter(lambda x: x[0] != chosen_workout[0], recently_suggested)
     )
 
 def duplicate(x, n):
@@ -35,16 +30,16 @@ def duplicate(x, n):
 
 def train_model(recently_suggested: np.array, chosen_workout: np.array):
     weights = retrieve_model()
-    one_data_in = duplicate(get_ai_model_data(chosen_workout), model.TRAIN_DATA_SIZE)
+    one_data_in = duplicate(chosen_workout[1:], model.TRAIN_DATA_SIZE)
     filtered_recently_suggested = filter_chosen_from_suggested(recently_suggested, chosen_workout)
     
     if len(filtered_recently_suggested) > model.TRAIN_DATA_SIZE:
         zero_data_in = [
-            get_ai_model_data(x) for x in sample(filtered_recently_suggested, model.TRAIN_DATA_SIZE)
+            x[1:] for x in sample(filtered_recently_suggested, model.TRAIN_DATA_SIZE)
         ]
     else:
         zero_data_in = [
-            get_ai_model_data(x) for x in filtered_recently_suggested
+            x[1:] for x in filtered_recently_suggested
         ]
 
     data_in = np.array(one_data_in + zero_data_in)

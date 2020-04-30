@@ -89,7 +89,7 @@ def get_global_signed_ratio_squared():
     return sum([
         (get_people_signed_for_a_workout(workout['id']) / workout['max_people']) ** 2
         for workout in recently_ended
-    ]) / len(recently_ended)
+    ]) / max(1, len(recently_ended))
 
 
 def generate_workout_model_data(workouts, user, user_sports, fullness, now):
