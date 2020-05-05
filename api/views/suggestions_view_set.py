@@ -12,9 +12,10 @@ from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_
 from api.models.workout import Workout
 from api.models.user import User
 from api.models.user_sport import UserSport
-from api.models.ai_model import retrieve_model, update_or_create_model
+from api.models.participation_request import ParticipationRequest
+from api.models.ai_model import retrieve_model
 from api.models.suggested_workout_history import SuggestedWorkoutHistoryItem, add_suggested_workout_to_history
-from api.serializers.workout_serializer import FullWorkoutSerializer, get_people_signed_for_a_workout
+from api.serializers.workout_serializer import BasicWorkoutSerializer, get_people_signed_for_a_workout
 from api.serializers.suggestion_request_serializer import SuggestionRequestSerializer
 from api.utils.time import get_current_age
 from api.views.paginators import ResultPagination
@@ -25,21 +26,29 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows workout suggestions to be viewed.
     """
-    serializer_class = FullWorkoutSerializer
+    serializer_class = BasicWorkoutSerializer
     filterset_fields = ['sport']
     pagination_class = ResultPagination
 
     def _initial_workout_filter(self, user, data):
         age = get_current_age(user.birth_date)
+        now = Now()
 
         filtered_workouts = (
             Workout.objects
             .exclude(user=user)
             .filter(
                 location__distance_lte=(user.location, D(km=100)),  # user within 100 km of the workout
-                start_time__gte=Now(),  # workout hasn't started yet
+                start_time__gte=now,  # workout hasn't started yet
                 age_min__lte=age,  # at least min age
                 age_max__gte=age,  # at most max age
+            )
+            .exclude(
+                id__in=[
+                    # if he already asked for participation in a workout, no need do show it a second time
+                    p.workout.id
+                    for p in ParticipationRequest.objects.filter(user=user)
+                ]
             )
             .annotate(distance=Distance('location', user.location))
         )
