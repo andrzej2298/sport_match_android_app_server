@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 from django.contrib.gis.db.models.functions import Distance
+from django.db.models.functions import Now
 from django.utils import timezone
 from rest_framework import viewsets, exceptions
 from rest_framework.response import Response
@@ -134,7 +135,11 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
             return ParticipationRequest.objects.filter(user__id=self.request.user.id)
         # only pending approval
         elif self.action == 'list':
-            return ParticipationRequest.objects.filter(workout__user__id=self.request.user.id, status=PENDING)
+            return ParticipationRequest.objects.filter(
+                workout__user__id=self.request.user.id,
+                workout__start_time__gte=Now(),
+                status=PENDING
+            )
         else:
             return ParticipationRequest.objects.filter(workout__user__id=self.request.user.id)
 

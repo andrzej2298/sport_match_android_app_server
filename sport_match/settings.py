@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'api',
 ]
 
+SIMPLIFIED_ISO = '%Y-%m-%dT%H:%M:%SZ'
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -58,6 +60,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
+    'DATETIME_FORMAT': SIMPLIFIED_ISO,
 }
 
 MIDDLEWARE = [
