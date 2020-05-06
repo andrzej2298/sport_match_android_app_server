@@ -1,12 +1,14 @@
 import logging
 import numpy as np
 from django.contrib.gis.db.models.functions import Distance
+from django.db.models.functions import Now
 from django.utils import timezone
 from rest_framework import viewsets, exceptions
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
 from rest_framework.permissions import AllowAny
 from rest_framework import mixins
+from api.models.constants import PENDING
 from api.models.user import User
 from api.models.participation_request import ParticipationRequest
 from api.models.workout import Workout
@@ -20,13 +22,16 @@ from api.models.ai_model import retrieve_model, update_or_create_model
 from random import sample
 from api.models.recommendations import model
 
+
 def filter_chosen_from_suggested(recently_suggested: np.array, chosen_workout: np.array):
     return list(
         filter(lambda x: x[0] != chosen_workout[0], recently_suggested)
     )
 
+
 def duplicate(x, n):
-    return [ x for _ in range(n) ]
+    return [x for _ in range(n)]
+
 
 def train_model(recently_suggested: np.array, chosen_workout: np.array):
     weights = retrieve_model()
@@ -128,6 +133,13 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
     def get_queryset(self):
         if self.action == 'create':
             return ParticipationRequest.objects.filter(user__id=self.request.user.id)
+        # only pending approval
+        elif self.action == 'list':
+            return ParticipationRequest.objects.filter(
+                workout__user__id=self.request.user.id,
+                workout__start_time__gte=Now(),
+                status=PENDING
+            )
         else:
             return ParticipationRequest.objects.filter(workout__user__id=self.request.user.id)
 

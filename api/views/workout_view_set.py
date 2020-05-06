@@ -14,6 +14,14 @@ from api.serializers.workout_serializer import FullWorkoutSerializer
 from api.models.constants import PENDING, ACCEPTED, REJECTED
 
 
+class DateFilter(FilterSet):
+    start_time = IsoDateTimeFromToRangeFilter()
+
+    class Meta:
+        model = Workout
+        fields = ['start_time']
+
+
 class HostedWorkoutViewSet(mixins.ListModelMixin,
                            mixins.RetrieveModelMixin,
                            mixins.CreateModelMixin,
@@ -23,6 +31,7 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
     API endpoint that allows workouts hosted by user to be viewed or edited.
     """
     serializer_class = FullWorkoutSerializer
+    filter_class = DateFilter
 
     def create(self, request, *args, **kwargs):
         request.data['user'] = request.user.id
@@ -91,14 +100,6 @@ class RecentlyRejectedWorkoutViewSet(mixins.ListModelMixin,
         relevant_requests.update(seen=True)
 
         return recently_accepted
-
-
-class DateFilter(FilterSet):
-    start_time = IsoDateTimeFromToRangeFilter()
-
-    class Meta:
-        model = Workout
-        fields = ['start_time']
 
 
 class WorkoutViewSet(mixins.RetrieveModelMixin,
