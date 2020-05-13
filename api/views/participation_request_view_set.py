@@ -125,23 +125,23 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
         if not (request and request.data and request.user):
             return context
 
-        request.data['user'] = request.user.id
+        request.data['user'] = request.user.user.id
         self._remove_disallowed_fields(request)
 
         return context
 
     def get_queryset(self):
         if self.action == 'create':
-            return ParticipationRequest.objects.filter(user__id=self.request.user.id)
+            return ParticipationRequest.objects.filter(user__id=self.request.user.user.id)
         # only pending approval
         elif self.action == 'list':
             return ParticipationRequest.objects.filter(
-                workout__user__id=self.request.user.id,
+                workout__user__id=self.request.user.user.id,
                 workout__start_time__gte=Now(),
                 status=PENDING
             )
         else:
-            return ParticipationRequest.objects.filter(workout__user__id=self.request.user.id)
+            return ParticipationRequest.objects.filter(workout__user__id=self.request.user.user.id)
 
     def get_serializer_class(self):
         if self.action == 'create':

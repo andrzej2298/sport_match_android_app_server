@@ -59,14 +59,14 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         request_data = self.request.data
-        user = User.objects.get(id=self.request.user.id)
+        user = User.objects.get(id=self.request.user.user.id)
 
         serializer = SuggestionRequestSerializer(data=request_data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
         filtered_workouts = self._initial_workout_filter(user, data)
-        return _get_recommended_workouts(filtered_workouts[:100], user)
+        return _get_recommended_workouts(filtered_workouts[:150], user)
 
 
 def _one_hot(i, value_range):

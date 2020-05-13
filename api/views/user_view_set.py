@@ -18,12 +18,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def me(self, request):
-        queryset = User.objects.get(id=request.user.id)
+        queryset = User.objects.get(id=request.user.user.id)
         serializer = UserSerializer(queryset)
         return Response(serializer.data)
 
     def update_me(self, request, *args, **kwargs):
-        instance = User.objects.get(id=request.user.id)
+        instance = User.objects.get(id=request.user.user.id)
         serializer = UserSerializer(instance, data=request.data, partial=kwargs['partial'])
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)

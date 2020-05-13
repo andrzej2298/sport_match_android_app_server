@@ -34,7 +34,7 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
     filter_class = DateFilter
 
     def create(self, request, *args, **kwargs):
-        request.data['user'] = request.user.id
+        request.data['user'] = request.user.user.id
         response = super().create(request, *args, **kwargs)
 
         if response.status_code == HTTP_201_CREATED:
@@ -43,7 +43,7 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
         return response
 
     def get_queryset(self):
-        return Workout.objects.filter(user__id=self.request.user.id)
+        return Workout.objects.filter(user__id=self.request.user.user.id)
 
 
 def get_request_related_workouts(**kwargs):
@@ -62,7 +62,7 @@ class PendingWorkoutViewSet(mixins.ListModelMixin,
     serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
-        return get_request_related_workouts(user__id=self.request.user.id, status=PENDING)
+        return get_request_related_workouts(user__id=self.request.user.user.id, status=PENDING)
 
 
 class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
@@ -73,7 +73,7 @@ class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
     serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
-        user_id = self.request.user.id
+        user_id = self.request.user.user.id
         relevant_requests = ParticipationRequest.objects.filter(user__id=user_id, status=ACCEPTED, seen=False)
         recently_accepted = {
             request.workout for request in relevant_requests.select_related('workout')
@@ -92,7 +92,7 @@ class RecentlyRejectedWorkoutViewSet(mixins.ListModelMixin,
     serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
-        user_id = self.request.user.id
+        user_id = self.request.user.user.id
         relevant_requests = ParticipationRequest.objects.filter(user__id=user_id, status=REJECTED, seen=False)
         recently_accepted = {
             request.workout for request in relevant_requests.select_related('workout')
@@ -113,7 +113,7 @@ class WorkoutViewSet(mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         if self.action == 'list':
-            user_id = self.request.user.id
+            user_id = self.request.user.user.id
             hosted = Workout.objects.filter(user__id=user_id)
 
             accepted_requests = [

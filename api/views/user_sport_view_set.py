@@ -11,8 +11,8 @@ class UserSportViewSet(viewsets.ModelViewSet):
     serializer_class = UserSportSerializer
 
     def create(self, request, *args, **kwargs):
-        request.data['user'] = request.user.id
+        request.data['user'] = request.user.user.id
         return super().create(request, *args, **kwargs)
 
     def get_queryset(self):
-        return UserSport.objects.filter(user__id=self.request.user.id)
+        return UserSport.objects.filter(user__id=self.request.user.user.id)
