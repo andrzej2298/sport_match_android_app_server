@@ -29,9 +29,6 @@ class UserViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
         return Response(serializer.data)
 
-    # TODO put and patch currently don't work properly
-    #   it seems that changing the password breaks some things
-    #   changing the username should also probably be disallowed
     @me.mapping.patch
     def partial_update_me(self, request, *args, **kwargs):
         kwargs['partial'] = True
