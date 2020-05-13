@@ -1,8 +1,9 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from api.models.participation_request import ParticipationRequest
 from api.models.constants import PENDING, ACCEPTED
-from .user_serializer import ParticipationRequestUserSerializer
-from .workout_serializer import BasicWorkoutInputSerializer
+from .user_serializer import MinimalUserSerializer
+from .workout_serializer import MinimalWorkoutSerializer
 
 
 class ParticipationRequestSerializer(serializers.ModelSerializer):
@@ -33,8 +34,14 @@ class ParticipationRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParticipationRequest
         exclude = ['seen']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ParticipationRequest.objects.all(),
+                fields=['user', 'workout']
+            )
+        ]
 
 
 class ExpandedParticipationRequestSerializer(ParticipationRequestSerializer):
-    user = ParticipationRequestUserSerializer()
-    workout = BasicWorkoutInputSerializer()
+    user = MinimalUserSerializer()
+    workout = MinimalWorkoutSerializer()

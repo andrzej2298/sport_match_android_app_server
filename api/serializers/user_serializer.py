@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User as DjangoUser
 
 from api.models.user import User
@@ -7,7 +8,11 @@ from .user_sport_serializer import UserSportSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='auth_user.username', read_only=False)
+    username = serializers.CharField(
+        source='auth_user.username',
+        read_only=False,
+        validators=[UniqueValidator(queryset=DjangoUser.objects.all())]
+    )
     password = serializers.CharField(source='auth_user.password', read_only=False, write_only=True)
     email = serializers.CharField(source='auth_user.email', read_only=False)
     sport_list = UserSportSerializer(many=True, read_only=True)
@@ -47,19 +52,11 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-class BasicDataUserSerializer(UserSerializer):
+class MinimalUserSerializer(UserSerializer):
     class Meta:
         model = User
         fields = [
             'id', 'username'
-        ]
-
-
-class ParticipationRequestUserSerializer(UserSerializer):
-    class Meta:
-        model = User
-        fields = [
-            'id', 'username', 'location'
         ]
 
 

@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import FilterSet, IsoDateTimeFromToRangeFilter
 from api.models.workout import Workout
 from api.models.participation_request import ParticipationRequest
-from api.serializers.workout_serializer import FullWorkoutSerializer
+from api.serializers.workout_serializer import FullWorkoutSerializer, BasicWorkoutInputSerializer
 from api.models.constants import PENDING, ACCEPTED, REJECTED
 
 
@@ -27,7 +27,6 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows workouts hosted by user to be viewed or edited.
     """
-    serializer_class = FullWorkoutSerializer
     filter_class = DateFilter
 
     def create(self, request, *args, **kwargs):
@@ -41,6 +40,12 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         return Workout.objects.filter(user__id=self.request.user.user.id)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return FullWorkoutSerializer
+        else:
+            return BasicWorkoutInputSerializer
 
 
 def get_request_related_workouts(**kwargs):
@@ -103,7 +108,9 @@ class WorkoutViewSet(mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      viewsets.GenericViewSet):
     """
-    API endpoint that allows specific workouts to be viewed or edited.
+    API endpoint that allows a list of the workouts a particular user is
+    going to take part in to be viewed.
+    Also, any workout by any user can be viewed by id.
     Filtering by date and time is allowed.
     """
     filter_class = DateFilter
