@@ -3,7 +3,6 @@ from api.models.user_sport import UserSport
 from api.serializers.user_sport_serializer import UserSportSerializer
 
 
-# TODO updating should also be available
 class UserSportViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows user's sports to be viewed or edited.

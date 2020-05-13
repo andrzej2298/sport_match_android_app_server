@@ -4,9 +4,6 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from django.contrib.gis.geos import Point
-from django.contrib.gis.measure import D
-from django.contrib.gis.db.models.functions import Distance
 from django_filters.rest_framework import FilterSet, IsoDateTimeFromToRangeFilter
 from api.models.workout import Workout
 from api.models.participation_request import ParticipationRequest
@@ -130,29 +127,6 @@ class WorkoutViewSet(mixins.RetrieveModelMixin,
     def get_serializer_class(self):
         # TODO permissions
         return FullWorkoutSerializer
-
-
-class MatchingWorkoutViewSet(viewsets.ViewSet):
-    """
-    API endpoint that allows matching workouts to be viewed.
-    """
-
-    def list(self, request):
-        if 'lat' in request.query_params and 'lon' in request.query_params:
-            reference_point = Point(
-                float(request.query_params['lat']),
-                float(request.query_params['lon']),
-            )
-            queryset = Workout.objects.filter(
-                location__distance_lte=(reference_point, D(km=10))
-            ).annotate(
-                distance=Distance('location', reference_point)
-            ).order_by('distance')
-            serializer = FullWorkoutSerializer(queryset, context={'request': request}, many=True)
-            return Response(serializer.data)
-        else:
-            serializer = FullWorkoutSerializer(Workout.objects.all(), context={'request': request}, many=True)
-            return Response(serializer.data)
 
 
 workout_info = {
