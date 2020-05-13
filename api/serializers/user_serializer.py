@@ -25,7 +25,10 @@ class UserSerializer(serializers.ModelSerializer):
 
         auth_user = instance.auth_user
         for attr, value in auth_user_data.items():
-            setattr(auth_user, attr, value)
+            if attr == 'password':
+                auth_user.set_password(value)
+            else:
+                setattr(auth_user, attr, value)
         auth_user.save()
 
         return instance

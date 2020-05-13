@@ -26,6 +26,13 @@ SPORTS = [
     'running',
     'swimming',
     'cycling',
+    'volleyball',
+    'basketball',
+    'soccer',
+    'workout',
+    'crossfit',
+    'archery',
+    'badminton',
     'other',
 ]
 

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from api.models.participation_request import ParticipationRequest
 from api.models.constants import PENDING, ACCEPTED
 from .user_serializer import ParticipationRequestUserSerializer
+from .workout_serializer import BasicWorkoutInputSerializer
 
 
 class ParticipationRequestSerializer(serializers.ModelSerializer):
@@ -36,3 +37,4 @@ class ParticipationRequestSerializer(serializers.ModelSerializer):
 
 class ExpandedParticipationRequestSerializer(ParticipationRequestSerializer):
     user = ParticipationRequestUserSerializer()
+    workout = BasicWorkoutInputSerializer()

@@ -2,12 +2,11 @@ from api.models.workout import Workout
 from api.models.user import User
 from api.models.participation_request import ParticipationRequest
 from rest_framework import serializers
-from .user_serializer import UserSerializer, BasicDataUserSerializer
-from .sport_serializer import SportSerializer
+from .user_serializer import BasicDataUserSerializer
 from ..models.constants import ACCEPTED
 
 
-class BasicWorkoutSerializer(serializers.ModelSerializer):
+class BasicWorkoutInputSerializer(serializers.ModelSerializer):
     signed_people = serializers.SerializerMethodField()
 
     def get_signed_people(self, obj):
@@ -28,11 +27,15 @@ class BasicWorkoutSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class BasicWorkoutOutputSerializer(BasicWorkoutInputSerializer):
+    user = BasicDataUserSerializer()
+
+
 def get_people_signed_for_a_workout(workout):
     return 1 + ParticipationRequest.objects.filter(workout=workout, status=ACCEPTED).count()
 
 
-class FullWorkoutSerializer(BasicWorkoutSerializer):
+class FullWorkoutSerializer(BasicWorkoutInputSerializer):
     user_list = serializers.SerializerMethodField()
 
     def get_user_list(self, obj):

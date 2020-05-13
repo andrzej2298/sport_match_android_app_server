@@ -4,9 +4,6 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from django.contrib.gis.geos import Point
-from django.contrib.gis.measure import D
-from django.contrib.gis.db.models.functions import Distance
 from django_filters.rest_framework import FilterSet, IsoDateTimeFromToRangeFilter
 from api.models.workout import Workout
 from api.models.participation_request import ParticipationRequest
@@ -34,7 +31,7 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
     filter_class = DateFilter
 
     def create(self, request, *args, **kwargs):
-        request.data['user'] = request.user.id
+        request.data['user'] = request.user.user.id
         response = super().create(request, *args, **kwargs)
 
         if response.status_code == HTTP_201_CREATED:
@@ -43,7 +40,7 @@ class HostedWorkoutViewSet(mixins.ListModelMixin,
         return response
 
     def get_queryset(self):
-        return Workout.objects.filter(user__id=self.request.user.id)
+        return Workout.objects.filter(user__id=self.request.user.user.id)
 
 
 def get_request_related_workouts(**kwargs):
@@ -62,7 +59,7 @@ class PendingWorkoutViewSet(mixins.ListModelMixin,
     serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
-        return get_request_related_workouts(user__id=self.request.user.id, status=PENDING)
+        return get_request_related_workouts(user__id=self.request.user.user.id, status=PENDING)
 
 
 class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
@@ -73,7 +70,7 @@ class RecentlyAcceptedWorkoutViewSet(mixins.ListModelMixin,
     serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
-        user_id = self.request.user.id
+        user_id = self.request.user.user.id
         relevant_requests = ParticipationRequest.objects.filter(user__id=user_id, status=ACCEPTED, seen=False)
         recently_accepted = {
             request.workout for request in relevant_requests.select_related('workout')
@@ -92,7 +89,7 @@ class RecentlyRejectedWorkoutViewSet(mixins.ListModelMixin,
     serializer_class = FullWorkoutSerializer
 
     def get_queryset(self):
-        user_id = self.request.user.id
+        user_id = self.request.user.user.id
         relevant_requests = ParticipationRequest.objects.filter(user__id=user_id, status=REJECTED, seen=False)
         recently_accepted = {
             request.workout for request in relevant_requests.select_related('workout')
@@ -113,7 +110,7 @@ class WorkoutViewSet(mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         if self.action == 'list':
-            user_id = self.request.user.id
+            user_id = self.request.user.user.id
             hosted = Workout.objects.filter(user__id=user_id)
 
             accepted_requests = [
@@ -130,29 +127,6 @@ class WorkoutViewSet(mixins.RetrieveModelMixin,
     def get_serializer_class(self):
         # TODO permissions
         return FullWorkoutSerializer
-
-
-class MatchingWorkoutViewSet(viewsets.ViewSet):
-    """
-    API endpoint that allows matching workouts to be viewed.
-    """
-
-    def list(self, request):
-        if 'lat' in request.query_params and 'lon' in request.query_params:
-            reference_point = Point(
-                float(request.query_params['lat']),
-                float(request.query_params['lon']),
-            )
-            queryset = Workout.objects.filter(
-                location__distance_lte=(reference_point, D(km=10))
-            ).annotate(
-                distance=Distance('location', reference_point)
-            ).order_by('distance')
-            serializer = FullWorkoutSerializer(queryset, context={'request': request}, many=True)
-            return Response(serializer.data)
-        else:
-            serializer = FullWorkoutSerializer(Workout.objects.all(), context={'request': request}, many=True)
-            return Response(serializer.data)
 
 
 workout_info = {

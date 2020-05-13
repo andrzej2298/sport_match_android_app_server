@@ -15,10 +15,13 @@ from api.models.user_sport import UserSport
 from api.models.participation_request import ParticipationRequest
 from api.models.ai_model import retrieve_model
 from api.models.suggested_workout_history import SuggestedWorkoutHistoryItem, add_suggested_workout_to_history
-from api.serializers.workout_serializer import BasicWorkoutSerializer, get_people_signed_for_a_workout
+from api.serializers.workout_serializer import BasicWorkoutOutputSerializer, get_people_signed_for_a_workout
 from api.serializers.suggestion_request_serializer import SuggestionRequestSerializer
 from api.utils.time import get_current_age
 from api.views.paginators import ResultPagination
+
+
+MAX_SUGGESTIONS = 30
 
 
 class SuggestedWorkoutViewSet(mixins.ListModelMixin,
@@ -26,7 +29,7 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
     """
     API endpoint that allows workout suggestions to be viewed.
     """
-    serializer_class = BasicWorkoutSerializer
+    serializer_class = BasicWorkoutOutputSerializer
     filterset_fields = ['sport']
     pagination_class = ResultPagination
 
@@ -51,6 +54,7 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
                 ]
             )
             .annotate(distance=Distance('location', user.location))
+            .order_by('?')
         )
 
         if 'sport' in data and data['sport']:
@@ -59,14 +63,14 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         request_data = self.request.data
-        user = User.objects.get(id=self.request.user.id)
+        user = User.objects.get(id=self.request.user.user.id)
 
         serializer = SuggestionRequestSerializer(data=request_data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
         filtered_workouts = self._initial_workout_filter(user, data)
-        return _get_recommended_workouts(filtered_workouts[:100], user)
+        return _get_recommended_workouts(filtered_workouts[:150], user)
 
 
 def _one_hot(i, value_range):
@@ -139,9 +143,6 @@ def get_single_workout_model_data(w, user, user_sports, fullness, now):
     ]
 
 
-# TODO function which should be replaced with a call to the
-#   machine learning model, this function adds a recommendation
-#   of value 1 for every workout
 def get_workout_recommendations(array: np.array):
     weights = retrieve_model()  # JSON model
 
@@ -175,7 +176,7 @@ def _get_recommended_workouts(workouts, user):
     # sort recommendations by value
     sorted_by_recommendation_value = recommended[recommended[:, 1].argsort()][::-1]
     # convert back to ints (numpy stored ids as floats)
-    recommended_ids = {int(workout_id) for workout_id in sorted_by_recommendation_value[:, 0].tolist()}
+    recommended_ids = {int(workout_id) for workout_id in sorted_by_recommendation_value[:MAX_SUGGESTIONS, 0].tolist()}
     # cannot filter the queryset directly, because it already has been sliced before
     recommended_workouts = Workout.objects.filter(id__in=recommended_ids)
 
