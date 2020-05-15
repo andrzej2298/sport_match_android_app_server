@@ -97,10 +97,11 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
             response = super().update(request, *args, **kwargs)
 
             if response.status_code == HTTP_200_OK:
+                user = User.objects.get(id=response.data["user"]["id"])
                 logging.getLogger('ai_model').info(f'REQUEST RESPONSE: {response.data["user"]["id"]}, '
-                                                   f'{response.data["user"]["location"]["coordinates"]}, '
+                                                   f'[{user.location.x}, {user.location.y}], '
                                                    f'{response.data["status"]}, '
-                                                   f'{response.data["workout"]}')
+                                                   f'{response.data["workout"]["id"]}')
 
             return response
 

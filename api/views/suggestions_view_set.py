@@ -8,7 +8,7 @@ from rest_framework import mixins, viewsets
 import numpy as np
 
 from api.models.recommendations import model
-from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_VALUE
+from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_VALUE, EITHER
 from api.models.workout import Workout
 from api.models.user import User
 from api.models.user_sport import UserSport
@@ -45,6 +45,7 @@ class SuggestedWorkoutViewSet(mixins.ListModelMixin,
                 start_time__gte=now,  # workout hasn't started yet
                 age_min__lte=age,  # at least min age
                 age_max__gte=age,  # at most max age
+                expected_gender__in=[EITHER, user.gender],  # matching gender
             )
             .exclude(
                 id__in=[
@@ -119,28 +120,30 @@ def get_single_workout_model_data(w, user, user_sports, fullness, now):
     user_proficiency = _get_user_proficiency(user_sports, workout_sport_id)
     workout_has_ben_seen = _get_workout_has_ben_seen(user, w)
     user_location = user.location
-    yield [
-        w.id,  # workout id
-        (workout_start_time - now).seconds / 60,  # minutes to workout
-        distance_to_workout.m,  # metres to workout
-        workout_location.x,  # workout location x
-        workout_location.y,  # workout location y
-        user_location.x,  # user location x
-        user_location.y,  # user location y
-        workout_start_time.hour * 60 + workout_start_time.minute,  # minutes from midnight to start
-        workout_end_time.hour * 60 + workout_end_time.minute,  # minutes from midnight to end
-        *_one_hot(workout_start_time.weekday(), 7),  # day of the week
-        *_one_hot(workout_sport_id - 1, _POSSIBLE_SPORTS),  # sport_id
-        *_one_hot(w.desired_proficiency, _POSSIBLE_PROFICIENCY_VALUES),  # workout sport proficiency
-        *_one_hot(user_proficiency, _POSSIBLE_PROFICIENCY_VALUES),  # user's proficiency
-        w.age_min,
-        w.age_max,
-        workout_has_ben_seen,
-        get_people_signed_for_a_workout(w.id),  # people taking part in the workout
-        w.max_people,
-        1,  # TODO common workouts, mock value for now
-        fullness,
-    ]
+    people_signed = get_people_signed_for_a_workout(w.id)
+    if people_signed < w.max_people:
+        yield [
+            w.id,  # workout id
+            (workout_start_time - now).seconds / 60,  # minutes to workout
+            distance_to_workout.m,  # metres to workout
+            workout_location.x,  # workout location x
+            workout_location.y,  # workout location y
+            user_location.x,  # user location x
+            user_location.y,  # user location y
+            workout_start_time.hour * 60 + workout_start_time.minute,  # minutes from midnight to start
+            workout_end_time.hour * 60 + workout_end_time.minute,  # minutes from midnight to end
+            *_one_hot(workout_start_time.weekday(), 7),  # day of the week
+            *_one_hot(workout_sport_id - 1, _POSSIBLE_SPORTS),  # sport_id
+            *_one_hot(w.desired_proficiency, _POSSIBLE_PROFICIENCY_VALUES),  # workout sport proficiency
+            *_one_hot(user_proficiency, _POSSIBLE_PROFICIENCY_VALUES),  # user's proficiency
+            w.age_min,
+            w.age_max,
+            workout_has_ben_seen,
+            people_signed,  # people taking part in the workout
+            w.max_people,
+            1,  # TODO common workouts, mock value for now
+            fullness,
+        ]
 
 
 def get_workout_recommendations(array: np.array):
