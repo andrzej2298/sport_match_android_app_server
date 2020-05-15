@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views.login_view_set import LoginView
+from rest_framework.authtoken import views
 from .views.user_view_set import UserViewSet, CreateUserViewSet
 from .views.workout_view_set import WorkoutViewSet, PendingWorkoutViewSet, HostedWorkoutViewSet, \
     RecentlyAcceptedWorkoutViewSet, RecentlyRejectedWorkoutViewSet
@@ -39,5 +39,5 @@ router.register(r'participation_requests', ParticipationRequestViewSet, basename
 urlpatterns = [
     path('', include(router.urls)),
     path('mock/', include(mock_router.urls)),
-    path('login/', LoginView.as_view()),
+    path('login/', views.obtain_auth_token),
 ]
