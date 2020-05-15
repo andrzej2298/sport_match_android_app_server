@@ -4,9 +4,7 @@ from django.contrib.gis.db.models.functions import Distance
 from django.db.models.functions import Now
 from django.utils import timezone
 from rest_framework import viewsets, exceptions
-from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
-from rest_framework.permissions import AllowAny
 from rest_framework import mixins
 from api.models.constants import PENDING
 from api.models.user import User
@@ -149,32 +147,3 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
             return ParticipationRequestSerializer
         else:
             return ExpandedParticipationRequestSerializer
-
-
-participation_request = {
-    'id': 1,
-    'workout': 1,
-    'user': {
-        'id': 1,
-        'username': 'user97',
-    },
-    'message': 'bardzo chcialbym biegac tak jak wy'
-}
-
-
-class MockParticipationRequestViewSet(viewsets.ViewSet):
-    """
-    API endpoint that allows users to request participation in a workout.
-    """
-    permission_classes = [AllowAny]
-
-    def list(self, request):
-        return Response([participation_request])
-
-    def create(self, request):
-        return Response(participation_request)
-
-    def partial_update(self, request, pk=None):
-        accepted_request = dict(participation_request)
-        accepted_request['accepted'] = True
-        return Response(accepted_request)
