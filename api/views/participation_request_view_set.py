@@ -15,7 +15,7 @@ from api.serializers.participation_request_serializer import ParticipationReques
 from api.models.suggested_workout_history import SuggestedWorkoutHistoryItem
 from api.models.user_sport import UserSport
 from api.views.suggestions_view_set import generate_workout_model_data, get_global_signed_ratio_squared, \
-    get_single_workout_model_data
+    get_single_workout_model_data, get_common_workouts
 from api.models.ai_model import retrieve_model, update_or_create_model
 from random import sample
 from api.models.recommendations import model
@@ -78,11 +78,15 @@ class ParticipationRequestViewSet(mixins.ListModelMixin,
                 .annotate(distance=Distance('location', user.location))
             user_sports = UserSport.objects.filter(user=user)
             fullness = get_global_signed_ratio_squared()
+            common = get_common_workouts(workout, user)
+            common_with_recent = get_common_workouts(recent_workouts, user)
             picked_workout_data = np.array(
-                list(get_single_workout_model_data(workout, user, user_sports, fullness, timezone.now()))[0]
+                list(get_single_workout_model_data(workout, user, user_sports, fullness, timezone.now(), common))[0]
             )
             data = np.array(list(
-                generate_workout_model_data(recent_workouts, user, user_sports, fullness, timezone.now())
+                generate_workout_model_data(
+                    recent_workouts, user, user_sports, fullness, timezone.now(), common_with_recent
+                )
             ))
             train_model(data, picked_workout_data)
 
