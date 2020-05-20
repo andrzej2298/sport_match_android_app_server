@@ -111,6 +111,35 @@ def generate_workout_model_data(workouts, user, user_sports, fullness, now):
         yield from get_single_workout_model_data(w, user, user_sports, fullness, now)
 
 
+def workout_start_time_key(w):
+    return w.start_time
+
+
+def get_past_workouts_model_data(user, now):
+    my_15_past_participated_workouts = Workout.objects.filter(
+            start_time__lte=now,  # workout hasn't started yet
+            id__in=[
+                p.workout.id
+                for p in ParticipationRequest.objects.filter(user=user)
+            ]
+        ).order_by('-start_time')[:15]
+    my_15_past_hosted_workouts = Workout.objects.filter(
+        user=user,
+        start_time__lte=now
+    ).order_by('-start_time')[:15]
+    my_15_past_workouts = (my_15_past_hosted_workouts + my_15_past_participated_workouts).sort(key=workout_start_time_key, reverse=True)[:15]
+    return_list = []
+
+    for workout in my_15_past_workouts:
+        return_list += [
+            *_one_hot(workout.sport_id - 1, _POSSIBLE_SPORTS),
+            *_one_hot(workout.desired_proficiency, _POSSIBLE_PROFICIENCY_VALUES),
+            (workout.start_time - now).seconds / 60    
+        ]
+
+    return return_list
+
+
 def get_single_workout_model_data(w, user, user_sports, fullness, now):
     workout_start_time = w.start_time
     workout_end_time = w.end_time
@@ -143,6 +172,7 @@ def get_single_workout_model_data(w, user, user_sports, fullness, now):
             w.max_people,
             1,  # TODO common workouts, mock value for now
             fullness,
+            *get_past_workouts_model_data(user, now)
         ]
 
 

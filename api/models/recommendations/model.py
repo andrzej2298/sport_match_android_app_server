@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-N = 39
+N = 39 + 15*15
 TRAIN_DATA_SIZE = 5
 
 
@@ -26,7 +26,7 @@ class RecommendationModel(tf.keras.Model):
 
 def get_new_model(weights):
     model = RecommendationModel()
-    model.compile(optimizer=tf.keras.optimizers.Adam(0.01),
+    model.compile(optimizer=tf.keras.optimizers.Adam(0.1),
                   loss='mae',
                   metrics=['mse'])
     model.fit([[1 for _ in range(N)]], [1], epochs=1, batch_size=1)
