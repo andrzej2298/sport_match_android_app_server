@@ -117,7 +117,7 @@ def workout_start_time_key(w):
 
 def get_past_workouts_model_data(user, now):
     my_15_past_participated_workouts = Workout.objects.filter(
-            start_time__lte=now,  # workout hasn't started yet
+            start_time__lte=now,
             id__in=[
                 p.workout.id
                 for p in ParticipationRequest.objects.filter(user=user)
