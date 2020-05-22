@@ -117,7 +117,7 @@ def workout_start_time_key(w):
 
 def get_past_workouts_model_data(user, now):
     my_15_past_participated_workouts = Workout.objects.filter(
-            start_time__lte=now,  # workout hasn't started yet
+            start_time__lte=now,
             id__in=[
                 p.workout.id
                 for p in ParticipationRequest.objects.filter(user=user)
@@ -127,7 +127,9 @@ def get_past_workouts_model_data(user, now):
         user=user,
         start_time__lte=now
     ).order_by('-start_time')[:15]
-    my_15_past_workouts = (my_15_past_hosted_workouts + my_15_past_participated_workouts).sort(key=workout_start_time_key, reverse=True)[:15]
+    my_15_past_workouts = list(my_15_past_hosted_workouts) + list(my_15_past_participated_workouts)
+    my_15_past_workouts.sort(key=workout_start_time_key, reverse=True)
+    my_15_past_workouts = my_15_past_workouts[:15]
     return_list = []
 
     for workout in my_15_past_workouts:
@@ -136,6 +138,8 @@ def get_past_workouts_model_data(user, now):
             *_one_hot(workout.desired_proficiency, _POSSIBLE_PROFICIENCY_VALUES),
             (workout.start_time - now).seconds / 60    
         ]
+
+    return_list += [ 0 for _ in range(15**2 - len(return_list)) ]
 
     return return_list
 
