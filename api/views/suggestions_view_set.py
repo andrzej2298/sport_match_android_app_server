@@ -111,6 +111,39 @@ def generate_workout_model_data(workouts, user, user_sports, fullness, now, comm
         yield from get_single_workout_model_data(w, user, user_sports, fullness, now, common)
 
 
+def workout_start_time_key(w):
+    return w.start_time
+
+
+def get_past_workouts_model_data(user, now):
+    my_15_past_participated_workouts = Workout.objects.filter(
+            start_time__lte=now,
+            id__in=[
+                p.workout.id
+                for p in ParticipationRequest.objects.filter(user=user)
+            ]
+        ).order_by('-start_time')[:15]
+    my_15_past_hosted_workouts = Workout.objects.filter(
+        user=user,
+        start_time__lte=now
+    ).order_by('-start_time')[:15]
+    my_15_past_workouts = list(my_15_past_hosted_workouts) + list(my_15_past_participated_workouts)
+    my_15_past_workouts.sort(key=workout_start_time_key, reverse=True)
+    my_15_past_workouts = my_15_past_workouts[:15]
+    return_list = []
+
+    for workout in my_15_past_workouts:
+        return_list += [
+            *_one_hot(workout.sport_id - 1, _POSSIBLE_SPORTS),
+            *_one_hot(workout.desired_proficiency, _POSSIBLE_PROFICIENCY_VALUES),
+            (workout.start_time - now).seconds / 60    
+        ]
+
+    return_list += [ 0 for _ in range(15**2 - len(return_list)) ]
+
+    return return_list
+
+
 def get_single_workout_model_data(w, user, user_sports, fullness, now, common):
     workout_start_time = w.start_time
     workout_end_time = w.end_time
@@ -143,6 +176,7 @@ def get_single_workout_model_data(w, user, user_sports, fullness, now, common):
             w.max_people,
             common[w.id],
             fullness,
+            *get_past_workouts_model_data(user, now)
         ]
 
 
