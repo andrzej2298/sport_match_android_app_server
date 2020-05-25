@@ -8,7 +8,7 @@ from rest_framework import mixins, viewsets
 import numpy as np
 
 from api.models.recommendations import model
-from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_VALUE, EITHER
+from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_VALUE, EITHER, ACCEPTED
 from api.models.workout import Workout
 from api.models.user import User
 from api.models.user_sport import UserSport
@@ -106,9 +106,9 @@ def get_global_signed_ratio_squared():
     ]) / max(1, len(recently_ended))
 
 
-def generate_workout_model_data(workouts, user, user_sports, fullness, now):
+def generate_workout_model_data(workouts, user, user_sports, fullness, now, common):
     for w in workouts:
-        yield from get_single_workout_model_data(w, user, user_sports, fullness, now)
+        yield from get_single_workout_model_data(w, user, user_sports, fullness, now, common)
 
 
 def workout_start_time_key(w):
@@ -144,7 +144,7 @@ def get_past_workouts_model_data(user, now):
     return return_list
 
 
-def get_single_workout_model_data(w, user, user_sports, fullness, now):
+def get_single_workout_model_data(w, user, user_sports, fullness, now, common):
     workout_start_time = w.start_time
     workout_end_time = w.end_time
     workout_location = w.location
@@ -174,7 +174,7 @@ def get_single_workout_model_data(w, user, user_sports, fullness, now):
             workout_has_ben_seen,
             people_signed,  # people taking part in the workout
             w.max_people,
-            1,  # TODO common workouts, mock value for now
+            common[w.id],
             fullness,
             *get_past_workouts_model_data(user, now)
         ]
@@ -198,11 +198,75 @@ def get_workout_recommendations(array: np.array):
     return result
 
 
+def _nested_iterable_to_set(input_iterable):
+    result_set = set()
+    for nested_list in input_iterable:
+        result_set |= set(nested_list)
+    return result_set
+
+
+def get_common_workouts(filtered_workouts, user):
+    if isinstance(filtered_workouts, Workout):
+        filtered_workouts = [filtered_workouts]
+    # with how many users in this workout do I have a common workout
+    result = {}
+
+    participants, participant_ids = _participant_ids(filtered_workouts)
+
+    # ways in which a current user A can have a common workout with another user B
+    # 1. A hosts a workout to which B is allowed
+    # 2. B hosts a workout to which A is allowed
+    # 3. A and B are allowed to take part in a workout
+    #    none of them is hosting
+
+    # participants of workouts the user has created, satisfies case 1.
+    users_hosted_workout_participants = _nested_iterable_to_set([
+        [p.user.id for p in w.participationrequest_set.filter(status=ACCEPTED, user__in=participant_ids)]
+        for w in user.workout_set.all()
+    ])
+
+    # workouts the user been allowed to participate in, satisfies cases 2. and 3.
+    users_accepted_workouts = _nested_iterable_to_set([
+        # case 2.
+        [p.workout.user.id] + [
+            # case 3.
+            q.user.id
+            for q in p
+                .workout
+                .participationrequest_set
+                .filter(status=ACCEPTED, user__in=participant_ids)
+        ] for p in user.participationrequest_set.filter(status=ACCEPTED)
+    ])
+
+    users_participating_in_common_workouts = users_hosted_workout_participants | users_accepted_workouts
+
+    for workout in filtered_workouts:
+        result[workout.id] = len(participants[workout.id] & users_participating_in_common_workouts)
+
+    return result
+
+
+def _participant_ids(filtered_workouts):
+    # participants in suggested workouts mapping
+    participants = {
+        w.id: {w.user.id} | {
+            p.user.id for p in w.participationrequest_set.filter(status=ACCEPTED)
+        }
+        for w in filtered_workouts
+    }
+    # participants in suggested workouts ids
+    participant_ids = _nested_iterable_to_set(participants.values())
+    return participants, participant_ids
+
+
 def _get_recommended_workouts(workouts, user):
     user_sports = UserSport.objects.filter(user=user)
     fullness = get_global_signed_ratio_squared()
 
-    filtered = np.array(list(generate_workout_model_data(workouts, user, user_sports, fullness, timezone.now())))
+    common = get_common_workouts(workouts, user)
+    filtered = np.array(list(
+        generate_workout_model_data(workouts, user, user_sports, fullness, timezone.now(), common)
+    ))
 
     # no suggestions, prevent accessing non existent columns
     if filtered.size == 0:

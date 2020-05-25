@@ -18,12 +18,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def me(self, request):
-        queryset = User.objects.get(id=request.user.user.id)
-        serializer = UserSerializer(queryset)
+        user = request.user.user
+        serializer = UserSerializer(user)
         return Response(serializer.data)
 
     def update_me(self, request, *args, **kwargs):
-        instance = User.objects.get(id=request.user.user.id)
+        instance = request.user.user
         serializer = UserSerializer(instance, data=request.data, partial=kwargs['partial'])
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -46,57 +46,3 @@ class CreateUserViewSet(mixins.CreateModelMixin,
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-
-user_info = {
-    'id': 1,
-    'username': 'example',
-    'mail': 'mail@example.com',
-    'birth_date': '2020-01-01',
-    'sport_list': [
-        {
-            'sport_id': 1,
-            'sport_proficiency': 2,
-        },
-        {
-            'sport_id': 2,
-            'sport_proficiency': 1
-        }
-    ],
-    'gender': 'F',
-    'phone_number': '+48111111111',
-    'description': 'I like dogs',
-}
-
-basic_info = {
-    'id': 1,
-    'username': 'Ja7000',
-    'sport_list': [
-        {
-            'sport_id': 1,
-            'sport_proficiency': 2,
-        },
-        {
-            'sport_id': 2,
-            'sport_proficiency': 1
-        }
-    ],
-    'gender': 'F',
-    'description': 'Oto ja',
-    'phone_number': '+48123456789',
-    'age': 33,
-}
-
-
-class MockUserViewset(viewsets.ViewSet):
-    """
-    API endpoint that allows users to update their info.
-    """
-    permission_classes = [AllowAny]
-
-    def retrieve(self, request, pk=None):
-        return Response(basic_info)
-
-    @action(methods=['get', 'put', 'patch'], detail=False)
-    def me(self, request):
-        return Response(user_info)

@@ -60,6 +60,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
+    'EXCEPTION_HANDLER': 'api.utils.exception_handler.custom_exception_handler',
     'DATETIME_FORMAT': SIMPLIFIED_ISO,
 }
 
@@ -71,6 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'sport_match.urls'
@@ -182,3 +184,10 @@ LOGGING = {
         },
     },
 }
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
+
+LANGUAGES = [('cd', 'Code'), ('en', 'English'), ('pl', 'Polish')]
+LANGUAGE_CODE = 'cd'
