@@ -8,6 +8,7 @@ from rest_framework import mixins, viewsets
 import numpy as np
 
 from api.models.recommendations import model
+from api.models.recommendations.model import RECENT_WORKOUTS_COUNT
 from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_VALUE, EITHER, ACCEPTED
 from api.models.workout import Workout
 from api.models.user import User
@@ -116,30 +117,30 @@ def workout_start_time_key(w):
 
 
 def get_past_workouts_model_data(user, now):
-    my_15_past_participated_workouts = Workout.objects.filter(
+    my_past_participated_workouts = Workout.objects.filter(
             start_time__lte=now,
             id__in=[
                 p.workout.id
                 for p in ParticipationRequest.objects.filter(user=user)
             ]
-        ).order_by('-start_time')[:15]
-    my_15_past_hosted_workouts = Workout.objects.filter(
+        ).order_by('-start_time')[:RECENT_WORKOUTS_COUNT]
+    my_past_hosted_workouts = Workout.objects.filter(
         user=user,
         start_time__lte=now
-    ).order_by('-start_time')[:15]
-    my_15_past_workouts = list(my_15_past_hosted_workouts) + list(my_15_past_participated_workouts)
-    my_15_past_workouts.sort(key=workout_start_time_key, reverse=True)
-    my_15_past_workouts = my_15_past_workouts[:15]
+    ).order_by('-start_time')[:RECENT_WORKOUTS_COUNT]
+    my_past_workouts = list(my_past_hosted_workouts) + list(my_past_participated_workouts)
+    my_past_workouts.sort(key=workout_start_time_key, reverse=True)
+    my_past_workouts = my_past_workouts[:RECENT_WORKOUTS_COUNT]
     return_list = []
 
-    for workout in my_15_past_workouts:
+    for workout in my_past_workouts:
         return_list += [
             *_one_hot(workout.sport_id - 1, _POSSIBLE_SPORTS),
             *_one_hot(workout.desired_proficiency, _POSSIBLE_PROFICIENCY_VALUES),
             (workout.start_time - now).seconds / 60    
         ]
 
-    return_list += [ 0 for _ in range(15**2 - len(return_list)) ]
+    return_list += [0 for _ in range(RECENT_WORKOUTS_COUNT**2 - len(return_list))]
 
     return return_list
 
