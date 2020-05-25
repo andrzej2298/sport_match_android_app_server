@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy as np
 
-N = 39 + 15*15
+RECENT_WORKOUTS_COUNT = 7
+N = 39 + RECENT_WORKOUTS_COUNT**2
 TRAIN_DATA_SIZE = 5
 
 
