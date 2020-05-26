@@ -19,7 +19,7 @@ class ParticipationRequestSerializer(serializers.ModelSerializer):
 
             signed_users = ParticipationRequest.objects.filter(workout=workout, status=ACCEPTED).count() + 1
             # don't allow too many people to be accepted
-            if status == ACCEPTED and signed_users >= workout.max_people:
+            if status == ACCEPTED and signed_users >= workout.people_max:
                 raise serializers.ValidationError('too many people already in the workout')
 
     def validate(self, attrs):
