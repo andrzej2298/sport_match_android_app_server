@@ -29,7 +29,7 @@ JOHNS_RUNNING = {
 }
 MIM_WORKOUT = {
     'name': 'MIM',
-    'max_people': 10,
+    'people_max': 10,
     'desired_proficiency': 0,
     'location': MIM_LOCATION,
     'location_name': 'mim',
@@ -50,7 +50,7 @@ BITWY_WARSZAWSKIEJ_COORDINATES = [
 
 BITWY_WARSZAWSKIEJ_WORKOUT = {
     'name': 'Bitwy Warszawskiej',
-    'max_people': 10,
+    'people_max': 10,
     'desired_proficiency': 0,
     'location': {
         'type': 'Point',

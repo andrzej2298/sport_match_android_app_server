@@ -102,7 +102,7 @@ def get_global_signed_ratio_squared():
     recently_ended = Workout.objects.filter(end_time__lte=Now()).order_by('end_time')[:1000].values()
 
     return sum([
-        (get_people_signed_for_a_workout(workout['id']) / workout['max_people']) ** 2
+        (get_people_signed_for_a_workout(workout['id']) / workout['people_max']) ** 2
         for workout in recently_ended
     ]) / max(1, len(recently_ended))
 
@@ -155,7 +155,7 @@ def get_single_workout_model_data(w, user, user_sports, fullness, now, common):
     workout_has_ben_seen = _get_workout_has_ben_seen(user, w)
     user_location = user.location
     people_signed = get_people_signed_for_a_workout(w.id)
-    if people_signed < w.max_people:
+    if people_signed < w.people_max:
         yield [
             w.id,  # workout id
             (workout_start_time - now).seconds / 60,  # minutes to workout
@@ -174,7 +174,7 @@ def get_single_workout_model_data(w, user, user_sports, fullness, now, common):
             w.age_max,
             workout_has_ben_seen,
             people_signed,  # people taking part in the workout
-            w.max_people,
+            w.people_max,
             common[w.id],
             fullness,
             *get_past_workouts_model_data(user, now)
