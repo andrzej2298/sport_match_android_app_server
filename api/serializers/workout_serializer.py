@@ -23,10 +23,8 @@ class BasicWorkoutInputSerializer(serializers.ModelSerializer):
         FullWorkoutSerializer.validate_less_than('start_time', 'end_time', attrs, 'end_before_start')
         FullWorkoutSerializer.validate_less_than('age_min', 'age_max', attrs, 'age_min_gt_age_max')
 
-        import sys
-        print(attrs['start_time'], timezone.now(), file=sys.stderr)
         if 'start_time' in attrs and attrs['start_time'] < timezone.now():
-                raise serializers.ValidationError('start_time_before_now')
+            raise serializers.ValidationError('start_time_before_now')
 
         return attrs
 
