@@ -1,9 +1,11 @@
-from api.models.workout import Workout
-from api.models.user import User
-from api.models.participation_request import ParticipationRequest
+from django.utils import timezone
 from rest_framework import serializers
+
+from api.models.constants import ACCEPTED
+from api.models.participation_request import ParticipationRequest
+from api.models.user import User
+from api.models.workout import Workout
 from .user_serializer import MinimalUserSerializer
-from ..models.constants import ACCEPTED
 
 
 class BasicWorkoutInputSerializer(serializers.ModelSerializer):
@@ -18,8 +20,14 @@ class BasicWorkoutInputSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(error_message)
 
     def validate(self, attrs):
-        FullWorkoutSerializer.validate_less_than('start_time', 'end_time', attrs, 'end must occur after start')
-        FullWorkoutSerializer.validate_less_than('age_min', 'age_max', attrs, 'min age must be smaller than max age')
+        FullWorkoutSerializer.validate_less_than('start_time', 'end_time', attrs, 'end_before_start')
+        FullWorkoutSerializer.validate_less_than('age_min', 'age_max', attrs, 'age_min_gt_age_max')
+
+        import sys
+        print(attrs['start_time'], timezone.now(), file=sys.stderr)
+        if 'start_time' in attrs and attrs['start_time'] < timezone.now():
+                raise serializers.ValidationError('start_time_before_now')
+
         return attrs
 
     class Meta:
