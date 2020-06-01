@@ -27,11 +27,11 @@ class Workout(geo_models.Model):
     # would have to be added to Meta to prevent full scans of the table
     location = geo_models.PointField()
     location_name = models.CharField(max_length=100, default='')
-    people_max = models.IntegerField(validators=PEOPLE_MAX_VALIDATORS, null=True)
+    people_max = models.IntegerField(validators=PEOPLE_MAX_VALIDATORS)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    age_min = models.IntegerField(validators=AGE_VALIDATORS, null=True, default=None)
-    age_max = models.IntegerField(validators=AGE_VALIDATORS, null=True, default=None)
+    age_min = models.IntegerField(validators=AGE_VALIDATORS, default=None)
+    age_max = models.IntegerField(validators=AGE_VALIDATORS, default=None)
     description = models.CharField(max_length=100, default='')
 
     def __str__(self):
