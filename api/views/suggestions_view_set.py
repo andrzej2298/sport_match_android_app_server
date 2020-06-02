@@ -8,7 +8,7 @@ from rest_framework import mixins, viewsets
 import numpy as np
 
 from api.models.recommendations import model
-from api.models.recommendations.model import RECENT_WORKOUTS_COUNT
+from api.models.recommendations.model import RECENT_WORKOUTS_DATA_LENGTH, RECENT_WORKOUTS_COUNT
 from api.models.constants import SPORTS, MIN_PROFICIENCY_VALUE, MAX_PROFICIENCY_VALUE, EITHER, ACCEPTED
 from api.models.workout import Workout
 from api.models.user import User
@@ -140,7 +140,7 @@ def get_past_workouts_model_data(user, now):
             (workout.start_time - now).seconds / 60    
         ]
 
-    return_list += [0 for _ in range(RECENT_WORKOUTS_COUNT**2 - len(return_list))]
+    return_list += [0 for _ in range(RECENT_WORKOUTS_DATA_LENGTH - len(return_list))]
 
     return return_list
 
@@ -273,6 +273,8 @@ def _get_recommended_workouts(workouts, user):
     if filtered.size == 0:
         return Workout.objects.none()
 
+    from sys import stderr
+    print(filtered.ndim, file=stderr)
     recommended = get_workout_recommendations(filtered)
 
     # sort recommendations by value
