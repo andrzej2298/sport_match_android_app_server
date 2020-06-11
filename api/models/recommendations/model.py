@@ -1,9 +1,18 @@
 import tensorflow as tf
 import numpy as np
 
+# data constants
 RECENT_WORKOUTS_COUNT = 7
-N = 39 + RECENT_WORKOUTS_COUNT**2
+BASIC_WORKOUT_FEATURES = 39
+RECENT_WORKOUT_FEATURES = 15
+RECENT_WORKOUTS_DATA_LENGTH = RECENT_WORKOUTS_COUNT * RECENT_WORKOUT_FEATURES
+N = BASIC_WORKOUT_FEATURES + RECENT_WORKOUTS_DATA_LENGTH
 TRAIN_DATA_SIZE = 5
+
+# model constants
+MIDDLE_LAYER_1_WEIGHT_MULTIPLIER = 2
+MIDDLE_LAYER_2_WEIGHT_MULTIPLIER = 3
+MIDDLE_LAYER_3_WEIGHT_MULTIPLIER = 5
 
 
 class RecommendationModel(tf.keras.Model):
@@ -11,9 +20,9 @@ class RecommendationModel(tf.keras.Model):
     def __init__(self):
         super(RecommendationModel, self).__init__()
         self.input_layer = tf.keras.layers.Dense(N, input_shape=[1, N])
-        self.middle_layer1 = tf.keras.layers.Dense(N * 2, activation='relu')
-        self.middle_layer2 = tf.keras.layers.Dense(N * 3, activation='relu')
-        self.middle_layer3 = tf.keras.layers.Dense(N * 5, activation='relu')
+        self.middle_layer1 = tf.keras.layers.Dense(N * MIDDLE_LAYER_1_WEIGHT_MULTIPLIER, activation='relu')
+        self.middle_layer2 = tf.keras.layers.Dense(N * MIDDLE_LAYER_2_WEIGHT_MULTIPLIER, activation='relu')
+        self.middle_layer3 = tf.keras.layers.Dense(N * MIDDLE_LAYER_3_WEIGHT_MULTIPLIER, activation='relu')
         self.output_layer = tf.keras.layers.Dense(1)
 
     def call(self, inputs):
